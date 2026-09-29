@@ -5,26 +5,384 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --app-radius: 14px;
+    --app-radius-sm: 8px;
+    --app-radius-lg: 18px;
+    --app-table-py: 0.6rem;
+    --app-table-px: 0.75rem;
+    --app-card-p: 1rem;
+
+    /* Base theme colors: Titanium Gold (Dark Default) */
+    --color-bg-body: #080b12;
+    --color-bg-card: rgba(20, 28, 44, 0.78);
+    --color-bg-card-solid: #111827;
+    --color-bg-card-hover: rgba(30, 41, 59, 0.65);
+    --color-border: rgba(255, 255, 255, 0.09);
+    --color-border-hover: rgba(245, 158, 11, 0.4);
+    --color-accent: #f59e0b;
+    --color-accent-hover: #d97706;
+    --color-accent-glow: rgba(245, 158, 11, 0.25);
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-table-head: #141c2c;
+    --color-table-sticky: #090d16;
+    --color-active-col: rgba(245, 158, 11, 0.07);
+    --color-active-col-border: rgba(245, 158, 11, 0.35);
+    --color-zebra: rgba(255, 255, 255, 0.018);
+    --color-modal-bg: rgba(9, 13, 22, 0.94);
+  }
+
+  /* ===================================================
+     1. ROSE BLOSSOM / PINK BALLOON THEME (LIGHT & VIBRANT)
+     =================================================== */
+  [data-theme="rose"] {
+    color-scheme: light;
+    --color-bg-body: #fff5f7;
+    --color-bg-card: rgba(255, 255, 255, 0.94);
+    --color-bg-card-solid: #ffffff;
+    --color-bg-card-hover: #ffeef3;
+    --color-border: #ffd0dc;
+    --color-border-hover: #ff0055;
+    --color-accent: #ff0055;
+    --color-accent-hover: #c94b79;
+    --color-accent-glow: rgba(255, 0, 85, 0.25);
+    --color-text-main: #3b1123;
+    --color-text-muted: #8c3558;
+    --color-table-head: #ffe6ee;
+    --color-table-sticky: #ffffff;
+    --color-active-col: rgba(255, 0, 85, 0.07);
+    --color-active-col-border: rgba(255, 0, 85, 0.35);
+    --color-zebra: rgba(255, 0, 85, 0.02);
+    --color-modal-bg: rgba(255, 255, 255, 0.98);
+  }
+
+  /* ===================================================
+     2. CUPCAKE PASTEL (MINT & ROSE PALETTE)
+     =================================================== */
+  [data-theme="cupcake"] {
+    color-scheme: light;
+    --color-bg-body: #f4faf9;
+    --color-bg-card: rgba(255, 255, 255, 0.95);
+    --color-bg-card-solid: #ffffff;
+    --color-bg-card-hover: #eaf6f4;
+    --color-border: #bceae3;
+    --color-border-hover: #0e7490;
+    --color-accent: #0e7490;
+    --color-accent-hover: #0891b2;
+    --color-accent-glow: rgba(14, 116, 144, 0.22);
+    --color-text-main: #0b343f;
+    --color-text-muted: #3a6b78;
+    --color-table-head: #e4f4f1;
+    --color-table-sticky: #ffffff;
+    --color-active-col: rgba(14, 116, 144, 0.07);
+    --color-active-col-border: rgba(14, 116, 144, 0.35);
+    --color-zebra: rgba(159, 229, 219, 0.04);
+    --color-modal-bg: rgba(255, 255, 255, 0.98);
+  }
+
+  /* ===================================================
+     2. TITANIUM LIGHT MINIMAL (LIGHT & CLEAN)
+     =================================================== */
+  [data-theme="light"] {
+    color-scheme: light;
+    --color-bg-body: #f8fafc;
+    --color-bg-card: rgba(255, 255, 255, 0.96);
+    --color-bg-card-solid: #ffffff;
+    --color-bg-card-hover: rgba(241, 245, 249, 0.9);
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-border-hover: rgba(2, 132, 199, 0.5);
+    --color-accent: #0284c7;
+    --color-accent-hover: #0369a1;
+    --color-accent-glow: rgba(2, 132, 199, 0.2);
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
+    --color-table-head: #e2e8f0;
+    --color-table-sticky: #ffffff;
+    --color-active-col: rgba(2, 132, 199, 0.08);
+    --color-active-col-border: rgba(2, 132, 199, 0.4);
+    --color-zebra: rgba(0, 0, 0, 0.02);
+    --color-modal-bg: rgba(255, 255, 255, 0.98);
+  }
+
+  /* ===================================================
+     3. CYBER NEON (DARK INDIGO & CYAN)
+     =================================================== */
+  [data-theme="cyber"] {
+    --color-bg-body: #050914;
+    --color-bg-card: rgba(15, 23, 42, 0.82);
+    --color-bg-card-solid: #0b1329;
+    --color-bg-card-hover: rgba(30, 58, 102, 0.5);
+    --color-border: rgba(56, 189, 248, 0.15);
+    --color-border-hover: rgba(56, 189, 248, 0.5);
+    --color-accent: #38bdf8;
+    --color-accent-hover: #0284c7;
+    --color-accent-glow: rgba(56, 189, 248, 0.3);
+    --color-table-head: #0e1a33;
+    --color-table-sticky: #060a17;
+    --color-active-col: rgba(56, 189, 248, 0.08);
+    --color-active-col-border: rgba(56, 189, 248, 0.4);
+    --color-modal-bg: rgba(6, 11, 24, 0.94);
+  }
+
+  /* ===================================================
+     4. EMERALD OBSIDIAN (DARK CARBON & FOREST MINT)
+     =================================================== */
+  [data-theme="emerald"] {
+    --color-bg-body: #06110d;
+    --color-bg-card: rgba(14, 31, 24, 0.82);
+    --color-bg-card-solid: #0a1f17;
+    --color-bg-card-hover: rgba(20, 56, 42, 0.5);
+    --color-border: rgba(16, 185, 129, 0.16);
+    --color-border-hover: rgba(16, 185, 129, 0.5);
+    --color-accent: #10b981;
+    --color-accent-hover: #059669;
+    --color-accent-glow: rgba(16, 185, 129, 0.3);
+    --color-table-head: #0d281e;
+    --color-table-sticky: #06120e;
+    --color-active-col: rgba(16, 185, 129, 0.08);
+    --color-active-col-border: rgba(16, 185, 129, 0.4);
+    --color-modal-bg: rgba(6, 17, 13, 0.94);
+  }
+
+  /* ===================================================
+     5. AMETHYST ROYAL (DARK DEEP VIOLET & MAGENTA)
+     =================================================== */
+  [data-theme="amethyst"] {
+    --color-bg-body: #0c0817;
+    --color-bg-card: rgba(24, 18, 44, 0.82);
+    --color-bg-card-solid: #150f29;
+    --color-bg-card-hover: rgba(49, 32, 85, 0.5);
+    --color-border: rgba(168, 85, 247, 0.16);
+    --color-border-hover: rgba(168, 85, 247, 0.5);
+    --color-accent: #a855f7;
+    --color-accent-hover: #9333ea;
+    --color-accent-glow: rgba(168, 85, 247, 0.3);
+    --color-table-head: #1c1338;
+    --color-table-sticky: #0b0716;
+    --color-active-col: rgba(168, 85, 247, 0.08);
+    --color-active-col-border: rgba(168, 85, 247, 0.4);
+    --color-modal-bg: rgba(12, 8, 23, 0.94);
+  }
+
+  /* ===================================================
+     6. SUNSET BRONZE (DARK COAL & FIERY AMBER)
+     =================================================== */
+  [data-theme="sunset"] {
+    --color-bg-body: #120a06;
+    --color-bg-card: rgba(36, 20, 14, 0.82);
+    --color-bg-card-solid: #22120b;
+    --color-bg-card-hover: rgba(68, 34, 20, 0.5);
+    --color-border: rgba(249, 115, 22, 0.16);
+    --color-border-hover: rgba(249, 115, 22, 0.5);
+    --color-accent: #f97316;
+    --color-accent-hover: #ea580c;
+    --color-accent-glow: rgba(249, 115, 22, 0.3);
+    --color-table-head: #2c160e;
+    --color-table-sticky: #110905;
+    --color-active-col: rgba(249, 115, 22, 0.08);
+    --color-active-col-border: rgba(249, 115, 22, 0.4);
+    --color-modal-bg: rgba(18, 10, 6, 0.94);
+  }
+
+  /* ===================================================
+     7. OLED PURE BLACK (ABSOLUTE BLACK HIGH CONTRAST)
+     =================================================== */
+  [data-theme="oled"] {
+    --color-bg-body: #000000;
+    --color-bg-card: #080808;
+    --color-bg-card-solid: #0c0c0e;
+    --color-bg-card-hover: #141417;
+    --color-border: rgba(255, 255, 255, 0.12);
+    --color-border-hover: rgba(255, 255, 255, 0.3);
+    --color-accent: #e4e4e7;
+    --color-accent-hover: #ffffff;
+    --color-accent-glow: rgba(255, 255, 255, 0.15);
+    --color-table-head: #0d0d10;
+    --color-table-sticky: #000000;
+    --color-active-col: rgba(255, 255, 255, 0.05);
+    --color-active-col-border: rgba(255, 255, 255, 0.3);
+    --color-modal-bg: rgba(5, 5, 5, 0.98);
   }
 
   body {
-    background-color: #080b12;
+    background-color: var(--color-bg-body);
+    color: var(--color-text-main);
+    transition: background-color 0.25s ease, color 0.25s ease;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.35) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 40%),
-      radial-gradient(at 50% 100%, rgba(56, 189, 248, 0.06) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(30, 41, 59, 0.25) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, var(--color-accent-glow) 0px, transparent 40%),
+      radial-gradient(at 50% 100%, rgba(56, 189, 248, 0.04) 0px, transparent 50%);
     background-attachment: fixed;
+  }
+
+  [data-theme="rose"] body {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(255, 208, 220, 0.65) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(255, 0, 85, 0.12) 0px, transparent 40%),
+      radial-gradient(at 50% 100%, rgba(240, 128, 162, 0.15) 0px, transparent 50%);
+  }
+
+  [data-theme="cupcake"] body {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(159, 229, 219, 0.55) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(251, 164, 183, 0.25) 0px, transparent 40%),
+      radial-gradient(at 50% 100%, rgba(118, 199, 237, 0.25) 0px, transparent 50%);
+  }
+
+  [data-theme="light"] body {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(226, 232, 240, 0.6) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(2, 132, 199, 0.08) 0px, transparent 40%),
+      radial-gradient(at 50% 100%, rgba(241, 245, 249, 0.8) 0px, transparent 50%);
+  }
+
+  /* Smooth dynamic radius mappings */
+  .rounded-2xl {
+    border-radius: var(--app-radius-lg, 18px) !important;
+  }
+  .rounded-xl {
+    border-radius: var(--app-radius, 14px) !important;
+  }
+  .rounded-lg {
+    border-radius: var(--app-radius-sm, 8px) !important;
   }
 }
 
-/* Custom Metallic Card Styles */
+/* ===================================================
+   GRAPHIC DESIGN OVERRIDES FOR LIGHT, ROSE & CUPCAKE PALETTES
+   =================================================== */
+
+[data-theme="rose"],
+[data-theme="cupcake"],
+[data-theme="light"] {
+  /* Container & canvas overrides */
+  .min-h-screen {
+    background-color: var(--color-bg-body) !important;
+    color: var(--color-text-main) !important;
+  }
+
+  /* Header / Navbar */
+  header {
+    background-color: var(--color-modal-bg) !important;
+    border-color: var(--color-border) !important;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* Replace hardcoded dark backgrounds */
+  .bg-metal-950,
+  .bg-metal-950\/80,
+  .bg-metal-950\/95,
+  .bg-metal-950\/60,
+  .bg-metal-950\/40 {
+    background-color: var(--color-bg-card-solid) !important;
+    color: var(--color-text-main) !important;
+  }
+
+  .bg-metal-900,
+  .bg-metal-900\/90,
+  .bg-metal-900\/80,
+  .bg-metal-900\/70,
+  .bg-metal-900\/60,
+  .bg-metal-900\/40 {
+    background-color: var(--color-table-head) !important;
+    color: var(--color-text-main) !important;
+  }
+
+  .bg-metal-850,
+  .bg-metal-800,
+  .bg-metal-800\/50,
+  .bg-metal-800\/40 {
+    background-color: var(--color-bg-card-hover) !important;
+    color: var(--color-text-main) !important;
+  }
+
+  /* Replace hardcoded texts */
+  .text-white,
+  .text-metal-100,
+  .text-metal-200,
+  .text-metal-300 {
+    color: var(--color-text-main) !important;
+  }
+
+  .text-metal-400,
+  .text-metal-500 {
+    color: var(--color-text-muted) !important;
+  }
+
+  /* Replace hardcoded borders */
+  .border-white\/10,
+  .border-white\/5,
+  .border-white\/15,
+  .border-white\/20 {
+    border-color: var(--color-border) !important;
+  }
+
+  /* Inputs, Selects, Search Bars */
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="password"],
+  select,
+  textarea {
+    background-color: var(--color-bg-card-solid) !important;
+    color: var(--color-text-main) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-muted) !important;
+    opacity: 0.8;
+  }
+
+  /* Month Pills in MonthSelector */
+  .bg-metal-950\/80 {
+    background-color: var(--color-bg-card-solid) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  /* Table Headers & Sticky Columns */
+  .matrix-table th {
+    background-color: var(--color-table-head) !important;
+    color: var(--color-text-main) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  .sticky-column-banco,
+  .sticky-column-gasto {
+    background-color: var(--color-table-sticky) !important;
+    color: var(--color-text-main) !important;
+    border-color: var(--color-border) !important;
+  }
+
+  /* Footer */
+  footer {
+    background-color: var(--color-modal-bg) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+  }
+}
+
+/* ===================================================
+   CARD SURFACES & STYLES
+   =================================================== */
+
 .metallic-card-surface {
-  background: linear-gradient(145deg, rgba(26, 34, 48, 0.75) 0%, rgba(13, 18, 27, 0.85) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="rose"] .metallic-card-surface {
+  box-shadow: 0 4px 20px -2px rgba(201, 75, 121, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .metallic-card-surface {
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .metallic-card-surface::before {
@@ -34,8 +392,28 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   pointer-events: none;
+  border-radius: inherit;
+}
+
+[data-theme="rose"] .metallic-card-surface::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 0, 85, 0.25), transparent);
+}
+
+[data-card-style="flat"] .metallic-card-surface {
+  background: var(--color-bg-card-solid) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+[data-card-style="flat"] .metallic-card-surface::before {
+  display: none !important;
+}
+
+[data-card-style="glow"] .metallic-card-surface {
+  border-color: var(--color-border-hover) !important;
+  box-shadow: 0 0 20px -5px var(--color-accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
 .metallic-card-interactive {
@@ -43,27 +421,67 @@
 }
 
 .metallic-card-interactive:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 14px 35px -8px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 20px rgba(245, 158, 11, 0.1);
+  border-color: var(--color-border-hover);
+  box-shadow: 0 14px 35px -8px rgba(0, 0, 0, 0.75), 0 0 20px var(--color-accent-glow);
   transform: translateY(-2px);
 }
 
-/* Metallic Beveled Buttons */
+[data-theme="rose"] .metallic-card-interactive:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 10px 25px -4px rgba(201, 75, 121, 0.2), 0 0 15px var(--color-accent-glow);
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .metallic-card-interactive:hover {
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.12), 0 0 15px var(--color-accent-glow);
+  transform: translateY(-2px);
+}
+
+/* ===================================================
+   BUTTONS & ACTIONS
+   =================================================== */
+
+/* Primary Button (Adapts with elegance to each theme) */
 .metallic-btn-gold {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
-  color: #ffffff;
-  border: 1px solid rgba(254, 240, 138, 0.4);
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 14px var(--color-accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
 }
 
 .metallic-btn-gold:hover {
-  background: linear-gradient(135deg, #fbbf24 0%, #ea580c 50%, #9a3412 100%);
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px var(--color-accent-glow), inset 0 1px 1px rgba(255, 255, 255, 0.55);
   transform: translateY(-1px);
 }
 
+/* Specific button gradations for dark gold */
+[data-theme="titanium"] .metallic-btn-gold {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+}
+
+/* Specific button gradations for Rose Balloon */
+[data-theme="rose"] .metallic-btn-gold {
+  background: linear-gradient(135deg, #ff0055 0%, #e0004c 50%, #c94b79 100%);
+  border-color: rgba(255, 208, 220, 0.5);
+  box-shadow: 0 4px 14px rgba(255, 0, 85, 0.4);
+}
+
+/* Specific button gradations for Cupcake Pastel */
+[data-theme="cupcake"] .metallic-btn-gold {
+  background: linear-gradient(135deg, #0e7490 0%, #06b6d4 50%, #0891b2 100%);
+  border-color: rgba(188, 234, 227, 0.6);
+  box-shadow: 0 4px 14px rgba(14, 116, 144, 0.35);
+}
+
+[data-theme="cupcake"] .metallic-btn-gold:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 50%, #0f6b85 100%);
+  box-shadow: 0 6px 20px rgba(14, 116, 144, 0.5);
+}
+
+/* Secondary Button */
 .metallic-btn-silver {
   background: linear-gradient(135deg, #334155 0%, #1e293b 50%, #0f172a 100%);
   color: #f1f5f9;
@@ -72,88 +490,96 @@
   transition: all 0.2s ease;
 }
 
+[data-theme="cupcake"] .metallic-btn-silver {
+  background: #e4f4f1 !important;
+  color: #0b343f !important;
+  border: 1px solid #bceae3 !important;
+  box-shadow: 0 2px 6px rgba(14, 116, 144, 0.08);
+}
+
+[data-theme="rose"] .metallic-btn-silver {
+  background: #ffe6ee !important;
+  color: #3b1123 !important;
+  border: 1px solid #ffd0dc !important;
+  box-shadow: 0 2px 6px rgba(201, 75, 121, 0.08);
+}
+
+[data-theme="light"] .metallic-btn-silver {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #0f172a !important;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .metallic-btn-silver:hover {
-  background: linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  filter: brightness(1.08);
   transform: translateY(-1px);
 }
 
-.metallic-btn-cyan {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%);
-  color: #ffffff;
-  border: 1px solid rgba(125, 211, 252, 0.4);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transition: all 0.2s ease;
-}
+/* ===================================================
+   TABLE MATRIX & VISUAL HIERARCHY
+   =================================================== */
 
-.metallic-btn-cyan:hover {
-  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 50%, #0369a1 100%);
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.6);
-  transform: translateY(-1px);
-}
-
-/* Metallic Gradients for Text */
-.text-metallic-gold {
-  background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #b45309 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-metallic-silver {
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-metallic-cyan {
-  background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 50%, #0284c7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-metallic-emerald {
-  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 50%, #047857 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #090d16;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #334155;
-}
-
-/* Polished Table Matrix Grid */
 .matrix-table {
   border-collapse: separate;
   border-spacing: 0;
+  width: 100%;
 }
 
 .matrix-table th {
-  background: linear-gradient(180deg, #1e293b 0%, #141c2c 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-table-head);
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  transition: background-color 0.2s ease;
 }
 
+/* Zebra Striping */
+.matrix-table-zebra tbody tr:nth-child(even) td {
+  background-color: var(--color-zebra);
+}
+
+/* Row Hover */
 .matrix-table tr:hover td {
-  background-color: rgba(30, 41, 59, 0.4);
+  background-color: var(--color-bg-card-hover) !important;
 }
 
+/* Crosshair column and cell highlighting */
+.matrix-cell-hovered {
+  background-color: var(--color-accent-glow) !important;
+  outline: 1px dashed var(--color-accent);
+}
+
+.matrix-col-highlighted {
+  background-color: var(--color-active-col) !important;
+}
+
+/* Active Month Column Glow Highlight */
+.col-active-month-header {
+  background: linear-gradient(180deg, var(--color-accent-glow) 0%, var(--color-table-head) 100%) !important;
+  border-top: 2px solid var(--color-accent) !important;
+  box-shadow: inset 0 2px 8px var(--color-accent-glow);
+}
+
+.col-active-month-cell {
+  background-color: var(--color-active-col) !important;
+  border-left: 1px solid var(--color-active-col-border) !important;
+  border-right: 1px solid var(--color-active-col-border) !important;
+}
+
+/* Sticky column separators */
+.sticky-column-banco {
+  background: var(--color-table-sticky) !important;
+  box-shadow: 2px 0 6px -1px rgba(0, 0, 0, 0.15);
+}
+
+.sticky-column-gasto {
+  background: var(--color-table-sticky) !important;
+  box-shadow: 4px 0 10px -2px rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--color-border);
+}
+
+/* Interactive cell input */
 .matrix-cell-input {
   background: transparent;
   border: 1px solid transparent;
@@ -161,17 +587,39 @@
 }
 
 .matrix-cell-input:focus {
-  background: rgba(15, 23, 42, 0.9);
-  border-color: #f59e0b;
+  background: var(--color-bg-body);
+  border-color: var(--color-accent);
   outline: none;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 10px var(--color-accent-glow);
 }
 
-/* Glassmorphism overlays */
+/* ===================================================
+   GLASS MODALS & OVERLAYS
+   =================================================== */
+
 .glass-modal {
-  background: rgba(10, 14, 23, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--color-modal-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
 }

@@ -51,7 +51,14 @@ export const MonthSelector = ({
       {/* Active Month Header with Arrows */}
       <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+          <div
+            className="p-2 rounded-xl border"
+            style={{
+              backgroundColor: 'var(--color-accent-glow)',
+              color: 'var(--color-accent)',
+              borderColor: 'var(--color-border)'
+            }}
+          >
             <Calendar className="w-4 h-4" />
           </div>
           <div>

@@ -8,7 +8,9 @@ import {
   Building2,
   ChevronRight,
   Filter,
-  Check
+  Check,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { formatMoney } from '../utils/formatters';
 import { getExpenseUrgency } from '../utils/dateHelpers';
@@ -18,9 +20,18 @@ export const UpcomingDueWidget = ({
   banks,
   selectedMonth,
   onQuickPay,
-  onEditExpense
+  onEditExpense,
+  isCollapsed = false,
+  onToggleCollapse
 }) => {
   const [filterState, setFilterState] = useState('pending'); // 'all' | 'pending' | 'urgent' | 'paid'
+  const [localCollapsed, setLocalCollapsed] = useState(isCollapsed);
+
+  const collapsed = onToggleCollapse ? isCollapsed : localCollapsed;
+  const toggle = () => {
+    if (onToggleCollapse) onToggleCollapse();
+    else setLocalCollapsed(!localCollapsed);
+  };
 
   // Enrich expenses with bank and urgency
   const enrichedList = expenses.map((exp) => {
@@ -45,7 +56,6 @@ export const UpcomingDueWidget = ({
 
   // Sort by urgency / due day
   enrichedList.sort((a, b) => {
-    // Paid items at the bottom
     if (a.isPaid && !b.isPaid) return 1;
     if (!a.isPaid && b.isPaid) return -1;
     return a.dueDay - b.dueDay;
@@ -59,68 +69,132 @@ export const UpcomingDueWidget = ({
     return true;
   });
 
+  const pendingCount = enrichedList.filter((i) => !i.isPaid).length;
+  const urgentCount = enrichedList.filter((i) => !i.isPaid && (i.urgency.status === 'critical' || i.urgency.status === 'overdue')).length;
+
+  // Render minimal single line banner if collapsed
+  if (collapsed) {
+    return (
+      <div className="metallic-card-surface rounded-2xl p-3 border border-white/10 shadow-sm flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400">
+            <Clock className="w-4 h-4" />
+          </div>
+          <span className="font-bold text-xs text-white">Cronograma de Vencimientos:</span>
+          <span className="text-xs text-metal-300">
+            {pendingCount === 0 ? (
+              <span className="text-emerald-400 font-bold">¡Todos los pagos al día!</span>
+            ) : (
+              <span>
+                <strong className="text-amber-300">{pendingCount}</strong> pendientes
+                {urgentCount > 0 && <strong className="text-rose-400 ml-1.5">({urgentCount} urgentes)</strong>}
+              </span>
+            )}
+          </span>
+        </div>
+
+        <button
+          onClick={toggle}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-metal-300 bg-metal-900 border border-white/10 hover:text-white hover:border-amber-400/40 transition-all"
+        >
+          <span>Mostrar Cronograma</span>
+          <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="metallic-card-surface rounded-2xl p-5 border border-white/10 shadow-metallic">
       {/* Header & Filter Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
-            <Clock className="w-5 h-5" />
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="p-2 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--color-accent-glow)',
+                color: 'var(--color-accent)',
+                borderColor: 'var(--color-border)'
+              }}
+            >
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                Cronograma & Fechas Máximas de Pago
+                <span className="text-xs font-mono font-normal px-2 py-0.5 rounded-full bg-metal-800 text-metal-300 border border-white/5">
+                  {filteredList.length} items
+                </span>
+              </h2>
+              <p className="text-xs text-metal-400 hidden sm:block">
+                Visualiza qué debes pagar, en qué banco y cuántos días restan para la fecha máxima.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              Cronograma & Fechas Máximas de Pago
-              <span className="text-xs font-mono font-normal px-2 py-0.5 rounded-full bg-metal-800 text-metal-300 border border-white/5">
-                {filteredList.length} items
-              </span>
-            </h2>
-            <p className="text-xs text-metal-400">
-              Visualiza qué debes pagar, en qué banco y cuántos días restan para la fecha máxima.
-            </p>
-          </div>
+
+          {/* Quick Collapse Icon on Mobile/Desktop */}
+          <button
+            onClick={toggle}
+            className="p-1.5 rounded-lg text-metal-400 hover:text-white hover:bg-metal-800 transition-all sm:hidden"
+            title="Ocultar cronograma"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1 bg-metal-950 p-1 rounded-xl border border-white/10 self-stretch sm:self-auto overflow-x-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1 bg-metal-950 p-1 rounded-xl border border-white/10 overflow-x-auto">
+            <button
+              onClick={() => setFilterState('pending')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                filterState === 'pending'
+                  ? 'metallic-btn-gold text-white shadow-sm'
+                  : 'text-metal-400 hover:text-white'
+              }`}
+            >
+              Pendientes ({pendingCount})
+            </button>
+            <button
+              onClick={() => setFilterState('urgent')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                filterState === 'urgent'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                  : 'text-metal-400 hover:text-white'
+              }`}
+            >
+              Urgentes ({urgentCount})
+            </button>
+            <button
+              onClick={() => setFilterState('paid')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                filterState === 'paid'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'text-metal-400 hover:text-white'
+              }`}
+            >
+              Pagados ({enrichedList.filter((i) => i.isPaid).length})
+            </button>
+            <button
+              onClick={() => setFilterState('all')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                filterState === 'all'
+                  ? 'metallic-btn-silver text-white'
+                  : 'text-metal-400 hover:text-white'
+              }`}
+            >
+              Todos ({enrichedList.length})
+            </button>
+          </div>
+
+          {/* Desktop Collapse Trigger */}
           <button
-            onClick={() => setFilterState('pending')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              filterState === 'pending'
-                ? 'metallic-btn-gold text-white shadow-sm'
-                : 'text-metal-400 hover:text-white'
-            }`}
+            onClick={toggle}
+            className="hidden sm:flex items-center gap-1 text-xs text-metal-400 hover:text-amber-400 px-2 py-1.5 rounded-lg transition-colors"
+            title="Compactar cronograma"
           >
-            Pendientes ({enrichedList.filter((i) => !i.isPaid).length})
-          </button>
-          <button
-            onClick={() => setFilterState('urgent')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              filterState === 'urgent'
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                : 'text-metal-400 hover:text-white'
-            }`}
-          >
-            Urgentes ({enrichedList.filter((i) => !i.isPaid && (i.urgency.status === 'critical' || i.urgency.status === 'overdue')).length})
-          </button>
-          <button
-            onClick={() => setFilterState('paid')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              filterState === 'paid'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                : 'text-metal-400 hover:text-white'
-            }`}
-          >
-            Pagados ({enrichedList.filter((i) => i.isPaid).length})
-          </button>
-          <button
-            onClick={() => setFilterState('all')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              filterState === 'all'
-                ? 'metallic-btn-silver text-white'
-                : 'text-metal-400 hover:text-white'
-            }`}
-          >
-            Todos ({enrichedList.length})
+            <ChevronUp className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -178,39 +252,40 @@ export const UpcomingDueWidget = ({
                   <div>
                     <span className="text-[10px] text-metal-400 block uppercase">Máximo Pago:</span>
                     <span className="font-bold text-amber-300">
-                      {item.dueDay} de cada mes
+                      Día {item.dueDay}
                     </span>
                   </div>
                 </div>
 
                 {/* Bottom Row: Actions */}
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <span className="text-[11px] text-metal-400 truncate max-w-[130px]">
-                    {item.payment?.note || item.notes || 'Gasto fijo'}
-                  </span>
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/5">
+                  <button
+                    onClick={() => onEditExpense(item)}
+                    className="text-[11px] text-metal-400 hover:text-white transition-colors"
+                  >
+                    Editar detalle
+                  </button>
 
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => onQuickPay(item)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                        item.isPaid
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
-                          : 'metallic-btn-gold text-white shadow-sm'
-                      }`}
-                    >
-                      {item.isPaid ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Pagado</span>
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="w-3.5 h-3.5" />
-                          <span>Pagar</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => onQuickPay(item)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      item.isPaid
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20'
+                        : 'metallic-btn-gold text-white shadow-sm'
+                    }`}
+                  >
+                    {item.isPaid ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Pagado</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>Pagar Ahora</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             );

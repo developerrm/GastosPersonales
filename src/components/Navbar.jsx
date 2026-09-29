@@ -13,9 +13,12 @@ import {
   BarChart3,
   Table,
   CreditCard,
-  Sparkles
+  Palette,
+  Sparkles,
+  Minimize2,
+  Maximize2
 } from 'lucide-react';
-import { getMonthName } from '../utils/formatters';
+import { THEMES } from '../services/themeService';
 
 export const Navbar = ({
   activeTab,
@@ -23,11 +26,14 @@ export const Navbar = ({
   selectedMonth,
   setSelectedMonth,
   months,
+  themeSettings,
   onOpenExpenseModal,
   onOpenIncomeModal,
   onOpenSqlModal,
   onOpenDataModal,
-  onOpenBanksModal
+  onOpenBanksModal,
+  onOpenThemeModal,
+  onToggleMinimalist
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -39,32 +45,53 @@ export const Navbar = ({
     { id: 'banks', label: 'Bancos & Categorías', icon: Layers }
   ];
 
+  const currentTheme = THEMES.find((t) => t.id === themeSettings?.theme) || THEMES[0];
+  const isMinimalist = !!themeSettings?.minimalistMode;
+
   return (
-    <header className="sticky top-0 z-40 bg-metal-950/80 backdrop-blur-md border-b border-white/10 shadow-2xl">
+    <header className="sticky top-0 z-40 backdrop-blur-md border-b shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand / Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-600 to-amber-800 p-0.5 shadow-metallic-glow-gold flex items-center justify-center">
-              <div className="w-full h-full bg-metal-900 rounded-[10px] flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-amber-400" />
+            <div
+              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${currentTheme.badgeClass || 'from-amber-400 to-amber-700'} p-0.5 shadow-sm flex items-center justify-center`}
+            >
+              <div
+                className="w-full h-full rounded-[10px] flex items-center justify-center"
+                style={{ backgroundColor: 'var(--color-bg-card-solid)' }}
+              >
+                <Wallet className="w-5 h-5" style={{ color: currentTheme.primaryColor }} />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-lg tracking-tight text-white">
-                  Finanz<span className="text-metallic-gold">Titan</span>
+                <span className="font-extrabold text-lg tracking-tight">
+                  Finanz<span style={{ color: currentTheme.primaryColor }}>Titan</span>
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 uppercase tracking-widest">
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded-full border uppercase tracking-widest"
+                  style={{
+                    backgroundColor: 'var(--color-accent-glow)',
+                    color: 'var(--color-accent)',
+                    borderColor: 'var(--color-border)'
+                  }}
+                >
                   PRO
                 </span>
               </div>
-              <p className="text-[11px] text-metal-400 font-medium">Control de Gastos Fijos & Fechas</p>
+              <p className="text-[11px] opacity-75 font-medium hidden sm:block">Control de Gastos Fijos & Fechas</p>
             </div>
           </div>
 
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-metal-900/90 p-1 rounded-xl border border-white/5 shadow-inner">
+          <nav
+            className="hidden md:flex items-center gap-1 p-1 rounded-xl border shadow-inner"
+            style={{
+              backgroundColor: 'var(--color-table-head)',
+              borderColor: 'var(--color-border)'
+            }}
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -72,28 +99,85 @@ export const Navbar = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200"
+                  style={
                     isActive
-                      ? 'metallic-btn-silver text-white shadow-lg'
-                      : 'text-metal-400 hover:text-metal-200 hover:bg-metal-800/50'
-                  }`}
+                      ? {
+                          backgroundColor: 'var(--color-bg-card-solid)',
+                          color: 'var(--color-text-main)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                          border: '1px solid var(--color-border)'
+                        }
+                      : {
+                          color: 'var(--color-text-muted)',
+                          opacity: 0.85
+                        }
+                  }
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-metal-400'}`} />
-                  {tab.label}
+                  <Icon
+                    className="w-4 h-4"
+                    style={{ color: isActive ? 'var(--color-accent)' : 'inherit' }}
+                  />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Action Buttons */}
-          <div className="hidden lg:flex items-center gap-2.5">
+          {/* Action Buttons & Customization Controls */}
+          <div className="hidden lg:flex items-center gap-2">
+            {/* Quick Minimalist / Focus Toggle */}
+            <button
+              onClick={onToggleMinimalist}
+              title={isMinimalist ? 'Desactivar Modo Minimalista (Mostrar todo)' : 'Activar Modo Minimalista (Vista limpia / Focus)'}
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-medium transition-all border shadow-sm"
+              style={
+                isMinimalist
+                  ? {
+                      backgroundColor: 'var(--color-accent-glow)',
+                      color: 'var(--color-accent)',
+                      borderColor: 'var(--color-accent)'
+                    }
+                  : {
+                      backgroundColor: 'var(--color-bg-card-solid)',
+                      borderColor: 'var(--color-border)'
+                    }
+              }
+            >
+              {isMinimalist ? (
+                <Minimize2 className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+              <span className="text-[11px]">{isMinimalist ? 'Minimalista' : 'Detallado'}</span>
+            </button>
+
+            {/* Theme & Customization Button */}
+            <button
+              onClick={onOpenThemeModal}
+              title="Personalizar Tema, Colores y Bordes"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all shadow-sm group"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
+            >
+              <Palette className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" style={{ color: currentTheme.primaryColor }} />
+              <span>{currentTheme.name.split(' ')[0]}</span>
+              <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: currentTheme.primaryColor }} />
+            </button>
+
             {/* Quick Income Button */}
             <button
               onClick={onOpenIncomeModal}
               title="Ajustar Sueldo / Ingreso del mes"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-metal-300 bg-metal-900 border border-white/10 hover:border-amber-500/40 hover:text-amber-300 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-medium border transition-all shadow-sm"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
-              <DollarSign className="w-3.5 h-3.5 text-amber-400" />
+              <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
               <span>Sueldo</span>
             </button>
 
@@ -101,42 +185,65 @@ export const Navbar = ({
             <button
               onClick={onOpenSqlModal}
               title="Generar Script y Schema MySQL"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-metal-300 bg-metal-900 border border-white/10 hover:border-sky-500/40 hover:text-sky-300 transition-all shadow-sm"
+              className="p-2 rounded-xl border transition-all shadow-sm"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
-              <Database className="w-3.5 h-3.5 text-sky-400" />
-              <span>MySQL</span>
+              <Database className="w-3.5 h-3.5 text-sky-500" />
             </button>
 
             {/* Backup / Export */}
             <button
               onClick={onOpenDataModal}
               title="Copia de Seguridad & Restauración"
-              className="p-2 rounded-xl text-metal-400 bg-metal-900 border border-white/10 hover:text-white hover:border-white/20 transition-all shadow-sm"
+              className="p-2 rounded-xl border transition-all shadow-sm"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-3.5 h-3.5" />
             </button>
 
             {/* Add Expense Primary Button */}
             <button
               onClick={onOpenExpenseModal}
-              className="metallic-btn-gold flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide"
+              className="metallic-btn-gold flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold tracking-wide shadow-md"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>+ Nuevo Gasto</span>
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>+ Gasto</span>
             </button>
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <div className="flex items-center gap-2 md:hidden">
+          {/* Mobile Menu Toggle & Quick Actions */}
+          <div className="flex items-center gap-1.5 md:hidden">
+            <button
+              onClick={onOpenThemeModal}
+              className="p-2 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
+              title="Personalizar Tema"
+            >
+              <Palette className="w-4 h-4" style={{ color: currentTheme.primaryColor }} />
+            </button>
             <button
               onClick={onOpenExpenseModal}
               className="metallic-btn-gold p-2 rounded-xl"
+              title="Nuevo Gasto"
             >
               <PlusCircle className="w-4 h-4" />
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-metal-300 bg-metal-900 border border-white/10"
+              className="p-2 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -146,7 +253,13 @@ export const Navbar = ({
 
       {/* Mobile Dropdown Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-white/10 bg-metal-950/95 backdrop-blur-xl px-4 pt-2 pb-4 space-y-3">
+        <div
+          className="md:hidden border-b px-4 pt-2 pb-4 space-y-3"
+          style={{
+            backgroundColor: 'var(--color-modal-bg)',
+            borderColor: 'var(--color-border)'
+          }}
+        >
           <div className="grid grid-cols-2 gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -158,49 +271,84 @@ export const Navbar = ({
                     setActiveTab(tab.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  className="flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition-all border"
+                  style={
                     isActive
-                      ? 'metallic-btn-silver text-white'
-                      : 'text-metal-400 bg-metal-900/60 border border-white/5'
-                  }`}
+                      ? {
+                          backgroundColor: 'var(--color-bg-card-solid)',
+                          borderColor: 'var(--color-accent)',
+                          color: 'var(--color-accent)'
+                        }
+                      : {
+                          backgroundColor: 'var(--color-table-head)',
+                          borderColor: 'var(--color-border)'
+                        }
+                  }
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-metal-400'}`} />
-                  {tab.label}
+                  <Icon className="w-4 h-4" style={{ color: isActive ? 'var(--color-accent)' : 'inherit' }} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
+          {/* Mobile Quick Settings & Tools */}
+          <div className="grid grid-cols-4 gap-2 pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <button
+              onClick={() => {
+                onOpenThemeModal();
+                setMobileMenuOpen(false);
+              }}
+              className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[11px] border"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
+            >
+              <Palette className="w-4 h-4" style={{ color: currentTheme.primaryColor }} />
+              <span>Tema</span>
+            </button>
             <button
               onClick={() => {
                 onOpenIncomeModal();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs bg-metal-900 border border-white/10 text-amber-300"
+              className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[11px] border text-emerald-500"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
-              <DollarSign className="w-3.5 h-3.5" />
-              Sueldo
+              <DollarSign className="w-4 h-4" />
+              <span>Sueldo</span>
             </button>
             <button
               onClick={() => {
                 onOpenSqlModal();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs bg-metal-900 border border-white/10 text-sky-300"
+              className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[11px] border text-sky-500"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
-              <Database className="w-3.5 h-3.5" />
-              MySQL
+              <Database className="w-4 h-4" />
+              <span>MySQL</span>
             </button>
             <button
               onClick={() => {
                 onOpenDataModal();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs bg-metal-900 border border-white/10 text-metal-300"
+              className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[11px] border"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
             >
-              <Download className="w-3.5 h-3.5" />
-              Backup
+              <Download className="w-4 h-4" />
+              <span>Backup</span>
             </button>
           </div>
         </div>

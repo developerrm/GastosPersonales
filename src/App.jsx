@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { storageService } from './services/storageService';
+import { themeService, DEFAULT_THEME_SETTINGS } from './services/themeService';
 import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
 import { MonthSelector } from './components/MonthSelector';
 import { MetricCards } from './components/MetricCards';
 import { UpcomingDueWidget } from './components/UpcomingDueWidget';
@@ -14,6 +16,7 @@ import { IncomeModal } from './components/IncomeModal';
 import { QuickPayModal } from './components/QuickPayModal';
 import { SqlMigrationModal } from './components/SqlMigrationModal';
 import { DataExportModal } from './components/DataExportModal';
+import { ThemeCustomizerModal } from './components/ThemeCustomizerModal';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('matrix');
@@ -26,6 +29,13 @@ export function App() {
   const [categories, setCategories] = useState([]);
   const [months, setMonths] = useState([]);
 
+  // Theme & Appearance Customization States
+  const [themeSettings, setThemeSettings] = useState(DEFAULT_THEME_SETTINGS);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [isKpiCollapsed, setIsKpiCollapsed] = useState(false);
+  const [isDueWidgetCollapsed, setIsDueWidgetCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   // Modals
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -36,7 +46,7 @@ export function App() {
   const [editingExpense, setEditingExpense] = useState(null);
   const [quickPayExpense, setQuickPayExpense] = useState(null);
 
-  // Load Initial Data
+  // Load Initial Data & Theme
   const loadData = () => {
     const loadedExpenses = storageService.getExpenses();
     const loadedIncomes = storageService.getIncomes();
@@ -49,6 +59,15 @@ export function App() {
     setBanks(loadedBanks);
     setCategories(loadedCategories);
     setMonths(loadedMonths);
+
+    // Initialize Theme settings
+    const loadedTheme = themeService.getSettings();
+    setThemeSettings(loadedTheme);
+    themeService.applyToDOM(loadedTheme);
+    if (loadedTheme.minimalistMode) {
+      setIsKpiCollapsed(true);
+      setIsDueWidgetCollapsed(true);
+    }
   };
 
   useEffect(() => {
@@ -56,6 +75,27 @@ export function App() {
   }, []);
 
   // --- HANDLERS ---
+  const handleSaveThemeSettings = (newSettings) => {
+    setThemeSettings(newSettings);
+    themeService.saveSettings(newSettings);
+    if (newSettings.minimalistMode) {
+      setIsKpiCollapsed(true);
+      setIsDueWidgetCollapsed(true);
+    }
+  };
+
+  const handleToggleMinimalist = () => {
+    const nextState = !themeSettings.minimalistMode;
+    const updated = {
+      ...themeSettings,
+      minimalistMode: nextState
+    };
+    setThemeSettings(updated);
+    themeService.saveSettings(updated);
+    setIsKpiCollapsed(nextState);
+    setIsDueWidgetCollapsed(nextState);
+  };
+
   const handleSaveExpense = (expenseData) => {
     const updated = storageService.saveExpense(expenseData);
     setExpenses(updated);
@@ -117,13 +157,11 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-metal-950 text-metal-100 flex flex-col antialiased selection:bg-amber-500/30 selection:text-amber-200">
-      {/* 1. Header Navigation */}
-      <Navbar
+      {/* 1. Desktop Lateral Sidebar */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        selectedMonth={selectedMonth}
-        setSelectedMonth={setSelectedMonth}
-        months={months}
+        themeSettings={themeSettings}
         onOpenExpenseModal={() => {
           setEditingExpense(null);
           setIsExpenseModalOpen(true);
@@ -131,42 +169,74 @@ export function App() {
         onOpenIncomeModal={() => setIsIncomeModalOpen(true)}
         onOpenSqlModal={() => setIsSqlModalOpen(true)}
         onOpenDataModal={() => setIsDataModalOpen(true)}
-        onOpenBanksModal={() => setActiveTab('banks')}
+        onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        onToggleMinimalist={handleToggleMinimalist}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
-      {/* 2. Main Content Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Month Selector Timeline */}
-        <MonthSelector
+      {/* 2. Mobile Header Navigation */}
+      <div className="md:hidden">
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          months={months}
+          themeSettings={themeSettings}
+          onOpenExpenseModal={() => {
+            setEditingExpense(null);
+            setIsExpenseModalOpen(true);
+          }}
+          onOpenIncomeModal={() => setIsIncomeModalOpen(true)}
+          onOpenSqlModal={() => setIsSqlModalOpen(true)}
+          onOpenDataModal={() => setIsDataModalOpen(true)}
+          onOpenBanksModal={() => setActiveTab('banks')}
+          onOpenThemeModal={() => setIsThemeModalOpen(true)}
+          onToggleMinimalist={handleToggleMinimalist}
+        />
+      </div>
+
+      {/* 3. Main Content Wrapper with dynamic left margin for Sidebar */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+          {/* Month Selector Timeline */}
+          <MonthSelector
           selectedMonth={selectedMonth}
           setSelectedMonth={setSelectedMonth}
           months={months}
           onAddNewMonth={handleAddNewMonth}
         />
 
-        {/* 5 Metallic KPI Metric Cards */}
-        <MetricCards
-          expenses={expenses}
-          incomes={incomes}
-          selectedMonth={selectedMonth}
-          banks={banks}
-          onOpenIncomeModal={() => setIsIncomeModalOpen(true)}
-          onSelectExpense={handleOpenQuickPay}
-        />
+        {/* 5 KPI Metric Cards (With Collapse & Minimalist Modes) */}
+        {themeSettings.showKpiCards !== false && (
+          <MetricCards
+            expenses={expenses}
+            incomes={incomes}
+            selectedMonth={selectedMonth}
+            banks={banks}
+            onOpenIncomeModal={() => setIsIncomeModalOpen(true)}
+            onSelectExpense={handleOpenQuickPay}
+            isCollapsed={isKpiCollapsed}
+            onToggleCollapse={() => setIsKpiCollapsed(!isKpiCollapsed)}
+          />
+        )}
 
         {/* Upcoming Due Date Strip / Chronogram (always visible or on relevant tabs) */}
-        {activeTab !== 'analytics' && activeTab !== 'banks' && (
+        {activeTab !== 'analytics' && activeTab !== 'banks' && themeSettings.showUpcomingWidget !== false && (
           <UpcomingDueWidget
             expenses={expenses}
             banks={banks}
             selectedMonth={selectedMonth}
             onQuickPay={handleOpenQuickPay}
             onEditExpense={handleOpenEditExpense}
+            isCollapsed={isDueWidgetCollapsed}
+            onToggleCollapse={() => setIsDueWidgetCollapsed(!isDueWidgetCollapsed)}
           />
         )}
 
         {/* Dynamic Tab Views */}
-        <div className="pt-2">
+        <div className="pt-1">
           {activeTab === 'matrix' && (
             <MatrixView
               expenses={expenses}
@@ -174,6 +244,8 @@ export function App() {
               months={months}
               banks={banks}
               categories={categories}
+              selectedMonth={selectedMonth}
+              themeSettings={themeSettings}
               onUpdatePayment={handleUpdatePayment}
               onOpenExpenseModal={() => {
                 setEditingExpense(null);
@@ -242,9 +314,16 @@ export function App() {
           <div className="flex items-center gap-2">
             <span className="font-bold text-metal-300">FinanzTitan</span>
             <span>•</span>
-            <span>Gestor de Gastos Fijos & Proyecciones</span>
+            <span>Gestor de Gastos Fijos & Fechas</span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsThemeModalOpen(true)}
+              className="hover:text-amber-400 transition-colors"
+            >
+              🎨 Personalizar Tema
+            </button>
+            <span>•</span>
             <button
               onClick={() => setIsSqlModalOpen(true)}
               className="hover:text-sky-400 transition-colors"
@@ -254,7 +333,7 @@ export function App() {
             <span>•</span>
             <button
               onClick={() => setIsDataModalOpen(true)}
-              className="hover:text-amber-400 transition-colors"
+              className="hover:text-emerald-400 transition-colors"
             >
               Exportar Datos
             </button>
@@ -263,6 +342,13 @@ export function App() {
       </footer>
 
       {/* Modals */}
+      <ThemeCustomizerModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        themeSettings={themeSettings}
+        onSaveThemeSettings={handleSaveThemeSettings}
+      />
+
       <ExpenseModal
         isOpen={isExpenseModalOpen}
         onClose={() => setIsExpenseModalOpen(false)}
@@ -301,6 +387,7 @@ export function App() {
         months={months}
         onDataReloaded={loadData}
       />
+    </div>
     </div>
   );
 }

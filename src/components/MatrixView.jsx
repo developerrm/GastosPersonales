@@ -12,9 +12,16 @@ import {
   DollarSign,
   AlertCircle,
   HelpCircle,
-  TrendingDown
+  TrendingDown,
+  Sparkles,
+  Calendar,
+  Check,
+  Eye,
+  Layers,
+  ChevronRight
 } from 'lucide-react';
 import { formatMoney } from '../utils/formatters';
+import { getAccessibleBadgeStyle, getModifiedAmountStyle, getTableFooterStyle } from '../utils/colorEngine';
 
 export const MatrixView = ({
   expenses,
@@ -22,6 +29,8 @@ export const MatrixView = ({
   months,
   banks,
   categories,
+  selectedMonth = '2026-09',
+  themeSettings,
   onUpdatePayment,
   onOpenExpenseModal,
   onEditExpense,
@@ -31,7 +40,33 @@ export const MatrixView = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBankFilter, setSelectedBankFilter] = useState('all');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pending' | 'completed'
+  const [monthRangeFilter, setMonthRangeFilter] = useState('all'); // 'all' | 'quarter' | 'semester'
   const [editingCell, setEditingCell] = useState(null); // { expId, monthKey, value }
+  const [hoveredRowId, setHoveredRowId] = useState(null);
+  const [hoveredColKey, setHoveredColKey] = useState(null);
+
+  const highlightActive = themeSettings?.highlightActiveMonth !== false;
+  const zebraStripes = themeSettings?.zebraStripes !== false;
+  const crosshairHover = themeSettings?.crosshairHover !== false;
+  const showProgressMini = themeSettings?.showProgressMini !== false;
+
+  const isLightMode = ['rose', 'cupcake', 'light'].includes(themeSettings?.theme);
+  const footerStyle = getTableFooterStyle(isLightMode);
+  const modifiedStyle = getModifiedAmountStyle(isLightMode);
+
+  // Compute visible months according to monthRangeFilter
+  const currentMonthIdx = months.findIndex((m) => m.key === selectedMonth);
+  let visibleMonths = months;
+
+  if (monthRangeFilter === 'quarter') {
+    // Show selected month ± 1 month (or 3 months window)
+    const start = Math.max(0, Math.min(currentMonthIdx - 1, months.length - 3));
+    visibleMonths = months.slice(start, start + 3);
+  } else if (monthRangeFilter === 'semester') {
+    const start = Math.max(0, Math.min(currentMonthIdx - 2, months.length - 6));
+    visibleMonths = months.slice(start, start + 6);
+  }
 
   // Filtered expenses
   const filteredExpenses = expenses.filter((exp) => {
@@ -40,10 +75,23 @@ export const MatrixView = ({
       (exp.notes && exp.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesBank = selectedBankFilter === 'all' || exp.bankId === selectedBankFilter;
     const matchesCat = selectedCategoryFilter === 'all' || exp.categoryId === selectedCategoryFilter;
-    return matchesSearch && matchesBank && matchesCat;
+
+    // Status filter across visible months
+    let matchesStatus = true;
+    if (statusFilter === 'pending') {
+      // Must have at least 1 unpaid month in visible months
+      const hasPending = visibleMonths.some((m) => exp.monthlyPayments?.[m.key]?.status !== 'paid');
+      matchesStatus = hasPending;
+    } else if (statusFilter === 'completed') {
+      // All visible months are paid
+      const allPaid = visibleMonths.every((m) => exp.monthlyPayments?.[m.key]?.status === 'paid');
+      matchesStatus = allPaid;
+    }
+
+    return matchesSearch && matchesBank && matchesCat && matchesStatus;
   });
 
-  // Calculate Column Totals for each month
+  // Calculate Column Totals for visible months
   const monthTotals = {};
   const monthIncomes = {};
   const monthBalances = {};
@@ -96,96 +144,215 @@ export const MatrixView = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Top Filter Bar */}
-      <div className="metallic-card-surface rounded-2xl p-4 border border-white/10 shadow-metallic flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Search */}
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-metal-400" />
-          <input
-            type="text"
-            placeholder="Buscar por gasto o nota..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-metal-950/80 border border-white/10 text-white placeholder-metal-500 text-xs focus:outline-none focus:border-amber-400"
-          />
+    <div className="space-y-3">
+      {/* Top Filter & Toolbar */}
+      <div className="metallic-card-surface rounded-2xl p-4 border border-white/10 shadow-metallic space-y-3">
+        {/* Row 1: Search, Dropdowns, Add button */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+          {/* Search */}
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-metal-400" />
+            <input
+              type="text"
+              placeholder="Buscar por gasto, banco o nota..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-metal-950/80 border border-white/10 text-white placeholder-metal-500 text-xs focus:outline-none focus:border-amber-400"
+            />
+          </div>
+
+          {/* Bank & Category Dropdowns */}
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
+            <select
+              value={selectedBankFilter}
+              onChange={(e) => setSelectedBankFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl bg-metal-950 border border-white/10 text-metal-300 text-xs focus:outline-none focus:border-amber-400"
+            >
+              <option value="all">🏦 Todos los Bancos ({banks.length})</option>
+              {banks.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl bg-metal-950 border border-white/10 text-metal-300 text-xs focus:outline-none focus:border-amber-400"
+            >
+              <option value="all">🏷️ Todas las Categorías</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Add Expense Shortcut */}
+            <button
+              onClick={onOpenExpenseModal}
+              className="metallic-btn-gold px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Gasto</span>
+            </button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
-          {/* Bank Filter */}
-          <select
-            value={selectedBankFilter}
-            onChange={(e) => setSelectedBankFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-metal-950 border border-white/10 text-metal-300 text-xs focus:outline-none focus:border-amber-400"
-          >
-            <option value="all">Todos los Bancos</option>
-            {banks.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
+        {/* Row 2: Horizon Filters & Status Pills for Maximum Visual Comfort */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-xs">
+          {/* Horizon Column Selector (3m, 6m, 12m) */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-metal-400 mr-1 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-amber-400" />
+              <span>Horizonte de Meses:</span>
+            </span>
+            <div className="flex items-center gap-1 bg-metal-950 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setMonthRangeFilter('all')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  monthRangeFilter === 'all'
+                    ? 'metallic-btn-gold text-white shadow-sm'
+                    : 'text-metal-400 hover:text-white'
+                }`}
+              >
+                Todos ({months.length}m)
+              </button>
+              <button
+                onClick={() => setMonthRangeFilter('quarter')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  monthRangeFilter === 'quarter'
+                    ? 'metallic-btn-gold text-white shadow-sm'
+                    : 'text-metal-400 hover:text-white'
+                }`}
+                title="Mostrar solo trimestre centrado en el mes activo"
+              >
+                Trimestre (3m)
+              </button>
+              <button
+                onClick={() => setMonthRangeFilter('semester')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  monthRangeFilter === 'semester'
+                    ? 'metallic-btn-gold text-white shadow-sm'
+                    : 'text-metal-400 hover:text-white'
+                }`}
+              >
+                Semestre (6m)
+              </button>
+            </div>
+          </div>
 
-          {/* Category Filter */}
-          <select
-            value={selectedCategoryFilter}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-metal-950 border border-white/10 text-metal-300 text-xs focus:outline-none focus:border-amber-400"
-          >
-            <option value="all">Todas las Categorías</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Add Expense Shortcut */}
-          <button
-            onClick={onOpenExpenseModal}
-            className="metallic-btn-gold px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ Gasto</span>
-          </button>
+          {/* Status Filter (Solo con pendientes vs todos) */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-metal-400 mr-1">Filtro Estado:</span>
+            <div className="flex items-center gap-1 bg-metal-950 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  statusFilter === 'all' ? 'bg-metal-800 text-white' : 'text-metal-400 hover:text-white'
+                }`}
+              >
+                Todos ({expenses.length})
+              </button>
+              <button
+                onClick={() => setStatusFilter('pending')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  statusFilter === 'pending'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    : 'text-metal-400 hover:text-white'
+                }`}
+              >
+                Con Pendientes
+              </button>
+              <button
+                onClick={() => setStatusFilter('completed')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  statusFilter === 'completed'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'text-metal-400 hover:text-white'
+                }`}
+              >
+                100% Pagados
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Main Interactive Spreadsheet Matrix */}
       <div className="metallic-card-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto scrollbar-thin">
-          <table className="w-full text-left matrix-table text-xs border-collapse">
+          <table className={`w-full text-left matrix-table text-xs border-collapse ${zebraStripes ? 'matrix-table-zebra' : ''}`}>
             <thead>
               <tr className="border-b border-white/15">
-                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-0 z-20 bg-metal-900 min-w-[140px] shadow-r">
+                {/* 1. Banco (Sticky Column) */}
+                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-0 z-20 sticky-column-banco min-w-[130px]">
                   BANCO
                 </th>
-                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-[140px] z-20 bg-metal-900 min-w-[160px] shadow-r">
+
+                {/* 2. Gasto (Sticky Column) */}
+                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-[130px] z-20 sticky-column-gasto min-w-[180px]">
                   GASTOS MENSUALES
                 </th>
-                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[120px] text-center">
-                  FECHA EMISIÓN / CORTE
+
+                {/* 3. Fechas */}
+                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[110px] text-center">
+                  CORTE
                 </th>
-                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[120px] text-center">
-                  FECHA MÁX PAGO
+                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[110px] text-center">
+                  MÁX PAGO
                 </th>
                 <th className="py-3 px-4 text-amber-300 font-extrabold uppercase tracking-wider min-w-[110px] text-right bg-amber-500/5">
                   ESTIMADO
                 </th>
 
-                {/* Dynamic Month Columns */}
-                {months.map((m) => (
-                  <th
-                    key={m.key}
-                    className="py-3 px-3 text-center min-w-[130px] font-extrabold text-white border-l border-white/10 bg-metal-900/90"
-                  >
-                    <div className="font-bold text-sm tracking-tight">{m.shortLabel || m.label}</div>
-                    <div className="text-[10px] text-amber-400/90 font-mono font-normal">
-                      Sueldo: {formatMoney(monthIncomes[m.key] || 0)}
-                    </div>
-                  </th>
-                ))}
+                {/* 4. Visible Month Columns */}
+                {visibleMonths.map((m) => {
+                  const isSelected = m.key === selectedMonth;
+                  const isColHovered = crosshairHover && hoveredColKey === m.key;
+
+                  return (
+                    <th
+                      key={m.key}
+                      onMouseEnter={() => setHoveredColKey(m.key)}
+                      onMouseLeave={() => setHoveredColKey(null)}
+                      className={`py-3 px-3 text-center min-w-[130px] font-extrabold border-l transition-all ${
+                        isSelected && highlightActive
+                          ? 'col-active-month-header'
+                          : isColHovered
+                          ? 'opacity-100'
+                          : 'opacity-90'
+                      }`}
+                      style={{
+                        borderColor: 'var(--color-border)',
+                        color: isSelected && highlightActive ? 'var(--color-accent)' : 'inherit'
+                      }}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="font-extrabold text-sm tracking-tight">{m.shortLabel || m.label}</span>
+                        {isSelected && highlightActive && (
+                          <span
+                            className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold tracking-tight shadow-sm"
+                            style={{
+                              backgroundColor: 'var(--color-accent)',
+                              color: '#ffffff'
+                            }}
+                            title="Mes Seleccionado"
+                          >
+                            ACTIVO
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className="text-[10px] font-mono font-normal mt-0.5"
+                        style={{ color: 'var(--color-accent)' }}
+                      >
+                        Sueldo: {formatMoney(monthIncomes[m.key] || 0)}
+                      </div>
+                    </th>
+                  );
+                })}
 
                 <th className="py-3 px-3 text-center min-w-[80px] font-bold text-metal-400">
                   ACCIONES
@@ -197,68 +364,121 @@ export const MatrixView = ({
               {filteredExpenses.map((exp) => {
                 const bank = banks.find((b) => b.id === exp.bankId) || {
                   name: 'Banco',
+                  shortName: 'Banco',
                   badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30'
                 };
 
-                // Highlight prominent rows (e.g. Internet, Tarjeta) if needed
+                // Calculate paid count across all months
+                const totalMonthsCount = months.length;
+                let paidMonthsCount = 0;
+                months.forEach((m) => {
+                  if (exp.monthlyPayments?.[m.key]?.status === 'paid') paidMonthsCount++;
+                });
+
+                const isRowHovered = crosshairHover && hoveredRowId === exp.id;
                 const isHighlight = exp.name.toUpperCase().includes('INTERNET') || exp.name.toUpperCase().includes('TARJETA');
 
                 return (
                   <tr
                     key={exp.id}
+                    onMouseEnter={() => setHoveredRowId(exp.id)}
+                    onMouseLeave={() => setHoveredRowId(null)}
                     className={`transition-colors ${
-                      isHighlight
+                      isRowHovered
+                        ? 'bg-metal-800/50'
+                        : isHighlight
                         ? 'bg-amber-500/5 hover:bg-amber-500/10'
-                        : 'hover:bg-metal-800/40'
+                        : 'hover:bg-metal-800/30'
                     }`}
                   >
-                    {/* Banco */}
-                    <td className="py-3 px-4 sticky left-0 z-10 bg-metal-950/95 font-sans">
-                      <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] font-bold border ${bank.badgeClass}`}>
+                    {/* 1. Banco (Sticky) */}
+                    <td className="py-2.5 px-4 sticky left-0 z-10 sticky-column-banco font-sans">
+                      <span
+                        className="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold border"
+                        style={getAccessibleBadgeStyle(bank.color || '#64748b', isLightMode)}
+                      >
                         {bank.shortName || bank.name}
                       </span>
                     </td>
 
-                    {/* Nombre del Gasto */}
-                    <td className="py-3 px-4 font-sans sticky left-[140px] z-10 bg-metal-950/95">
-                      <div className="font-bold text-white text-xs">{exp.name}</div>
+                    {/* 2. Nombre del Gasto (Sticky) */}
+                    <td className="py-2.5 px-4 font-sans sticky left-[130px] z-10 sticky-column-gasto">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-bold text-white text-xs truncate max-w-[140px]">{exp.name}</div>
+                        {/* Mini Annual Progress Pill */}
+                        {showProgressMini && (
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full border whitespace-nowrap ${
+                              paidMonthsCount === totalMonthsCount
+                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-bold'
+                                : paidMonthsCount > 0
+                                ? 'bg-sky-500/10 text-sky-300 border-sky-500/20'
+                                : 'bg-metal-800 text-metal-400 border-white/5'
+                            }`}
+                            title={`${paidMonthsCount} de ${totalMonthsCount} meses pagados en el año`}
+                          >
+                            {paidMonthsCount}/{totalMonthsCount} pagados
+                          </span>
+                        )}
+                      </div>
                       {exp.notes && (
-                        <div className="text-[10px] text-metal-400 truncate max-w-[150px]">
+                        <div className="text-[10px] text-metal-400 truncate max-w-[160px]">
                           {exp.notes}
                         </div>
                       )}
                     </td>
 
-                    {/* Fecha de Emisión / Corte */}
-                    <td className="py-3 px-3 text-center text-metal-300 font-sans text-xs">
-                      {exp.billingDay} de cada mes
+                    {/* 3. Fecha Emisión / Corte */}
+                    <td className="py-2.5 px-3 text-center text-metal-300 font-sans text-xs">
+                      Día {exp.billingDay}
                     </td>
 
-                    {/* Fecha Máxima de Pago */}
-                    <td className="py-3 px-3 text-center font-sans text-xs">
-                      <span className="inline-block px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
-                        {exp.dueDay} de cada mes
+                    {/* 4. Fecha Máxima de Pago */}
+                    <td className="py-2.5 px-3 text-center font-sans text-xs">
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-full font-bold border"
+                        style={{
+                          backgroundColor: 'var(--color-accent-glow)',
+                          color: 'var(--color-accent)',
+                          borderColor: 'var(--color-border)'
+                        }}
+                      >
+                        Día {exp.dueDay}
                       </span>
                     </td>
 
-                    {/* Estimado ($) */}
-                    <td className="py-3 px-4 text-right font-extrabold text-white bg-amber-500/5">
+                    {/* 5. Estimado ($) */}
+                    <td
+                      className="py-2.5 px-4 text-right font-extrabold"
+                      style={{ backgroundColor: 'var(--color-active-col)', color: 'var(--color-text-main)' }}
+                    >
                       {formatMoney(exp.estimatedAmount)}
                     </td>
 
-                    {/* Monthly Columns */}
-                    {months.map((m) => {
+                    {/* 6. Dynamic Month Columns */}
+                    {visibleMonths.map((m) => {
                       const mKey = m.key;
                       const payment = exp.monthlyPayments?.[mKey];
                       const amount = payment?.amount !== undefined ? payment.amount : exp.estimatedAmount;
                       const isPaid = payment?.status === 'paid';
+                      const isSelectedMonth = mKey === selectedMonth;
                       const isEditing =
                         editingCell && editingCell.expId === exp.id && editingCell.monthKey === mKey;
+                      const isColHovered = crosshairHover && hoveredColKey === mKey;
+                      const isModified = payment?.amount !== undefined && Number(payment.amount) !== Number(exp.estimatedAmount);
 
                       return (
                         <td
                           key={mKey}
-                          className="py-2.5 px-2 text-center border-l border-white/5 relative group"
+                          onMouseEnter={() => setHoveredColKey(mKey)}
+                          onMouseLeave={() => setHoveredColKey(null)}
+                          className={`py-2 px-2 text-center border-l border-white/5 relative group transition-all ${
+                            isSelectedMonth && highlightActive
+                              ? 'col-active-month-cell'
+                              : isColHovered
+                              ? 'bg-metal-800/30'
+                              : ''
+                          }`}
                         >
                           <div className="flex items-center justify-between gap-1">
                             {/* Toggle Paid Button */}
@@ -267,8 +487,8 @@ export const MatrixView = ({
                               title={isPaid ? 'Marcado como pagado (clic para desmarcar)' : 'Pendiente (clic para marcar pagado)'}
                               className={`p-1 rounded-md transition-all ${
                                 isPaid
-                                  ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-500/10'
-                                  : 'text-metal-600 hover:text-amber-400 hover:bg-metal-800'
+                                  ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30'
+                                  : 'text-metal-600 hover:text-amber-400 hover:bg-metal-800 border border-transparent'
                               }`}
                             >
                               <CheckCircle2 className={`w-3.5 h-3.5 ${isPaid ? 'fill-emerald-500/20' : ''}`} />
@@ -293,20 +513,36 @@ export const MatrixView = ({
                                 onClick={() =>
                                   setEditingCell({ expId: exp.id, monthKey: mKey, value: amount })
                                 }
-                                title="Clic para editar valor"
-                                className={`w-full text-right font-bold transition-all px-1.5 py-0.5 rounded ${
+                                title={isModified ? `Monto modificado de base ($${exp.estimatedAmount}) - Clic para editar` : 'Clic para editar monto'}
+                                className={`w-full text-right font-bold transition-all px-1.5 py-0.5 rounded flex items-center justify-end gap-1 ${
                                   isPaid
                                     ? 'text-emerald-300 bg-emerald-950/20 hover:bg-emerald-900/30'
                                     : amount === 0
                                     ? 'text-metal-500 hover:bg-metal-800'
-                                    : 'text-white hover:bg-metal-800 hover:text-amber-300'
+                                    : !isModified
+                                    ? 'text-white hover:bg-metal-800 hover:text-amber-300'
+                                    : ''
                                 }`}
+                                style={isModified && !isPaid && amount !== 0 ? {
+                                  backgroundColor: modifiedStyle.backgroundColor,
+                                  color: modifiedStyle.color,
+                                  border: `1px solid ${modifiedStyle.borderColor}`
+                                } : {}}
                               >
-                                {amount === 0 && payment?.note === 'pagado'
-                                  ? 'pagado'
-                                  : amount === 0
-                                  ? '-'
-                                  : formatMoney(amount)}
+                                {amount === 0 ? (
+                                  <span className="text-metal-500">-</span>
+                                ) : (
+                                  <>
+                                    {formatMoney(amount)}
+                                    {isModified && (
+                                      <span
+                                        className="w-1.5 h-1.5 rounded-full"
+                                        style={{ backgroundColor: modifiedStyle.indicatorColor }}
+                                        title="Monto ajustado manualmente"
+                                      />
+                                    )}
+                                  </>
+                                )}
                               </button>
                             )}
                           </div>
@@ -337,16 +573,42 @@ export const MatrixView = ({
                 );
               })}
 
-              {/* 1. TOTAL GASTOS MENSUALES ROW (Red / Crimson Metallic bar like in Excel) */}
-              <tr className="bg-gradient-to-r from-red-950 via-rose-900 to-red-950 text-white font-extrabold border-t-2 border-rose-500/50 shadow-lg">
-                <td colSpan={4} className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold sticky left-0 z-10 bg-red-950">
+              {/* 1. TOTAL GASTOS MENSUALES ROW */}
+              <tr
+                className="font-extrabold shadow-lg"
+                style={{
+                  background: footerStyle.background,
+                  borderTop: `2px solid ${footerStyle.borderColor}`,
+                  color: footerStyle.textLabelColor
+                }}
+              >
+                <td
+                  colSpan={4}
+                  className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold sticky left-0 z-10"
+                  style={{
+                    background: footerStyle.background
+                  }}
+                >
                   TOTAL GASTOS MENSUALES:
                 </td>
-                <td className="py-3 px-4 text-right font-mono text-amber-300 text-sm">
+                <td
+                  className="py-3 px-4 text-right font-mono text-sm"
+                  style={{ color: footerStyle.estimatedColor }}
+                >
                   {formatMoney(totalEstimatedSum)}
                 </td>
-                {months.map((m) => (
-                  <td key={m.key} className="py-3 px-3 text-right font-mono text-sm border-l border-rose-700/50">
+                {visibleMonths.map((m) => (
+                  <td
+                    key={m.key}
+                    className={`py-3 px-3 text-right font-mono text-sm border-l ${
+                      m.key === selectedMonth && highlightActive ? 'font-extrabold shadow-inner' : ''
+                    }`}
+                    style={{
+                      borderColor: footerStyle.borderColor,
+                      color: footerStyle.numberColor,
+                      backgroundColor: m.key === selectedMonth && highlightActive ? 'rgba(0,0,0,0.15)' : 'transparent'
+                    }}
+                  >
                     {formatMoney(monthTotals[m.key] || 0)}
                   </td>
                 ))}
@@ -361,7 +623,7 @@ export const MatrixView = ({
                 <td className="py-2.5 px-4 text-right font-mono text-metal-400 text-xs">
                   -
                 </td>
-                {months.map((m) => (
+                {visibleMonths.map((m) => (
                   <td key={m.key} className="py-2.5 px-3 text-right font-mono text-xs text-amber-400 font-bold border-l border-white/5">
                     {formatMoney(monthIncomes[m.key] || 0)}
                   </td>
@@ -369,14 +631,14 @@ export const MatrixView = ({
                 <td className="py-2.5 px-3 text-center">
                   <button
                     onClick={onOpenIncomeModal}
-                    className="text-[10px] text-amber-400 hover:underline"
+                    className="text-[10px] text-amber-400 hover:underline font-bold"
                   >
                     Editar
                   </button>
                 </td>
               </tr>
 
-              {/* 3. SALDOS REMANENTES ROW (Green / Emerald Highlight) */}
+              {/* 3. SALDOS REMANENTES ROW */}
               <tr className="bg-metal-950 font-extrabold text-white border-t-2 border-emerald-500/40">
                 <td colSpan={4} className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold text-sm sticky left-0 z-10 bg-metal-950 text-emerald-400">
                   Saldos Restantes:
@@ -384,7 +646,7 @@ export const MatrixView = ({
                 <td className="py-3 px-4 text-right font-mono text-xs text-metal-500">
                   -
                 </td>
-                {months.map((m) => {
+                {visibleMonths.map((m) => {
                   const balance = monthBalances[m.key] || 0;
                   return (
                     <td
@@ -405,12 +667,14 @@ export const MatrixView = ({
       </div>
 
       {/* Quick Footnote & Help Tip */}
-      <div className="flex items-center justify-between text-xs text-metal-400 px-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-metal-400 px-2 gap-2">
         <div className="flex items-center gap-1.5">
-          <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-          <span>Tip: Haz clic sobre cualquier valor de la tabla para editarlo directamente o en el círculo para alternar estado de pago.</span>
+          <HelpCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>Tip: Clic en cualquier celda para editar el monto. Clic en el círculo verde/gris para marcar como pagado.</span>
         </div>
-        <span>Total de gastos registrados: {filteredExpenses.length}</span>
+        <span className="font-mono text-metal-400">
+          Mostrando {filteredExpenses.length} de {expenses.length} gastos ({visibleMonths.length} meses visibles)
+        </span>
       </div>
     </div>
   );
