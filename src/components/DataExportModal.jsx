@@ -2,11 +2,8 @@ import React, { useState } from 'react';
 import {
   X,
   Download,
-  Upload,
-  RefreshCw,
   FileSpreadsheet,
   FileJson,
-  AlertTriangle,
   Check
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
@@ -15,10 +12,8 @@ export const DataExportModal = ({
   isOpen,
   onClose,
   expenses,
-  months,
-  onDataReloaded
+  months
 }) => {
-  const [importError, setImportError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   if (!isOpen) return null;
@@ -68,35 +63,6 @@ export const DataExportModal = ({
     setSuccessMsg('Archivo CSV para Excel generado.');
   };
 
-  // Import JSON
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result);
-        storageService.importAllData(json);
-        setSuccessMsg('¡Datos importados con éxito!');
-        setImportError('');
-        onDataReloaded();
-      } catch (err) {
-        setImportError('Error al procesar el archivo JSON: formato incompatible.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  // Reset to default
-  const handleReset = () => {
-    if (window.confirm('¿Seguro que deseas reiniciar todos los datos a la plantilla inicial de Excel? Se borrarán los cambios personalizados.')) {
-      storageService.resetAllData();
-      onDataReloaded();
-      setSuccessMsg('Datos restaurados a los valores iniciales.');
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
       <div className="metallic-card-surface glass-modal w-full max-w-md p-6 rounded-2xl border border-white/20 shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -130,13 +96,6 @@ export const DataExportModal = ({
             <span>{successMsg}</span>
           </div>
         )}
-        {importError && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            <span>{importError}</span>
-          </div>
-        )}
-
         <div className="space-y-3">
           {/* Export JSON Button */}
           <button
@@ -180,39 +139,9 @@ export const DataExportModal = ({
             <Download className="w-4 h-4 text-metal-400 group-hover:text-emerald-400" />
           </button>
 
-          {/* Import JSON File */}
-          <div className="p-3 rounded-xl bg-metal-950/80 border border-white/10">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div className="p-2 rounded-lg bg-metal-900 text-sky-400">
-                <Upload className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <span className="font-bold text-white text-xs block">
-                  Restaurar desde Archivo JSON
-                </span>
-                <span className="text-[11px] text-metal-400">
-                  Carga un backup previo generado en FinanzTitan.
-                </span>
-              </div>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Reset data */}
-          <div className="pt-2">
-            <button
-              onClick={handleReset}
-              className="w-full p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition-all"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Restaurar Datos de Ejemplo (Excel)</span>
-            </button>
-          </div>
+          <p className="text-[11px] text-metal-400">
+            La restauración de copias no está disponible con los endpoints actuales del backend.
+          </p>
         </div>
 
         {/* Footer */}

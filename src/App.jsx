@@ -121,7 +121,7 @@ export function App() {
 
   useEffect(() => {
     if (session) loadData();
-  }, [session?.token, loadData]);
+  }, [session, loadData]);
 
   // --- HANDLERS ---
   const handleSaveThemeSettings = (newSettings) => {
@@ -531,7 +531,6 @@ export function App() {
         onClose={() => setIsDataModalOpen(false)}
         expenses={expenses}
         months={months}
-        onDataReloaded={loadData}
       />
     </div>
     </div>
