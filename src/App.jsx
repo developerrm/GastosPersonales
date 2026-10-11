@@ -339,6 +339,11 @@ export function App() {
       {/* 3. Main Content Wrapper with dynamic left margin for Sidebar */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+          {dataError && (
+            <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+              {dataError}
+            </p>
+          )}
           {/* Month Selector Timeline */}
           <MonthSelector
           selectedMonth={selectedMonth}

@@ -9,7 +9,7 @@ Aplicación web interactiva y moderna para la gestión, control y visualización
 - **Analíticas y Gráficos**: Gráficos interactivos de distribución de gastos, comparativas mensuales y métricas clave.
 - **Gestión Bancaria**: Administración de cuentas, límites y formas de pago.
 - **Pagos Rápidos y Registro de Ingresos**: Control integral de flujos de dinero.
-- **Exportación e Importación de Datos**: Respaldo y migración sencilla en formato JSON y SQL.
+- **Exportación de Datos**: Respaldo de datos en formato JSON y CSV.
 
 ## 🔌 Conexión con el backend
 

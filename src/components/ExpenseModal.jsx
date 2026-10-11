@@ -20,8 +20,8 @@ export const ExpenseModal = ({
 }) => {
   const [formData, setFormData] = useState({
     name: '',
-    bankId: banks[0]?.id || 'pichincha',
-    categoryId: categories[0]?.id || 'servicios',
+    bankId: banks[0]?.id || '',
+    categoryId: categories[0]?.id || '',
     billingDay: 1,
     dueDay: 1,
     estimatedAmount: '',
@@ -33,8 +33,8 @@ export const ExpenseModal = ({
     if (editingExpense) {
       setFormData({
         name: editingExpense.name || '',
-        bankId: editingExpense.bankId || banks[0]?.id,
-        categoryId: editingExpense.categoryId || categories[0]?.id,
+        bankId: editingExpense.bankId || banks[0]?.id || '',
+        categoryId: editingExpense.categoryId || categories[0]?.id || '',
         billingDay: editingExpense.billingDay || 1,
         dueDay: editingExpense.dueDay || 1,
         estimatedAmount: editingExpense.estimatedAmount || '',
@@ -44,8 +44,8 @@ export const ExpenseModal = ({
     } else {
       setFormData({
         name: '',
-        bankId: banks[0]?.id || 'pichincha',
-        categoryId: categories[0]?.id || 'servicios',
+        bankId: banks[0]?.id || '',
+        categoryId: categories[0]?.id || '',
         billingDay: 1,
         dueDay: 1,
         estimatedAmount: '',
@@ -128,10 +128,11 @@ export const ExpenseModal = ({
                 Banco Asociado *
               </label>
               <select
-                value={formData.bankId}
+                value={formData.bankId || ''}
                 onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-metal-950 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 font-medium"
               >
+                <option value="">Sin banco asociado</option>
                 {banks.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -146,10 +147,11 @@ export const ExpenseModal = ({
                 Categoría *
               </label>
               <select
-                value={formData.categoryId}
+                value={formData.categoryId || ''}
                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-metal-950 border border-white/10 text-white text-xs focus:outline-none focus:border-amber-400 font-medium"
               >
+                <option value="">Sin categoría</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
