@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Building2,
   Plus,
@@ -15,7 +15,6 @@ export const BanksManager = ({
 }) => {
   const [editingBank, setEditingBank] = useState(null);
   const [bankFormData, setBankFormData] = useState({
-    id: '',
     name: '',
     color: '#f59e0b',
     accountType: 'Cuenta de Ahorros',
@@ -35,17 +34,14 @@ export const BanksManager = ({
     e.preventDefault();
     if (!bankFormData.name) return;
 
-    const id = bankFormData.id || `bank-${Date.now()}`;
     const newBank = {
       ...bankFormData,
-      id,
       badgeClass: `bg-[${bankFormData.color}]/15 text-white border-white/20`
     };
 
     onSaveBank(newBank);
     setEditingBank(null);
     setBankFormData({
-      id: '',
       name: '',
       color: '#f59e0b',
       accountType: 'Cuenta de Ahorros',
@@ -85,7 +81,6 @@ export const BanksManager = ({
               onClick={() => {
                 setEditingBank('new');
                 setBankFormData({
-                  id: '',
                   name: '',
                   color: '#f59e0b',
                   accountType: 'Cuenta de Ahorros',

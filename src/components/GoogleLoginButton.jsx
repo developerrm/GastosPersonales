@@ -44,6 +44,7 @@ export default function GoogleLoginButton({ onSuccess, className = '' }) {
     window.google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         console.warn('No se pudo mostrar el selector de Google');
+        setLoading(false);
       }
     });
   };

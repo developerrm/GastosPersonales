@@ -11,15 +11,13 @@ import {
   Server
 } from 'lucide-react';
 import { generateMySQLDump } from '../services/sqlExporter';
-import { storageService } from '../services/storageService';
 
-export const SqlMigrationModal = ({ isOpen, onClose }) => {
+export const SqlMigrationModal = ({ isOpen, onClose, fullData }) => {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('sql'); // 'sql' | 'tables' | 'backend'
 
   if (!isOpen) return null;
 
-  const fullData = storageService.exportAllData();
   const sqlContent = generateMySQLDump(fullData);
 
   const handleCopy = () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   X,
   Download,
@@ -6,61 +6,106 @@ import {
   FileJson,
   Check
 } from 'lucide-react';
-import { storageService } from '../services/storageService';
+import { apiService } from '../services/apiService';
 
 export const DataExportModal = ({
   isOpen,
   onClose,
   expenses,
+  incomes,
+  banks,
+  categories,
   months
 }) => {
   const [successMsg, setSuccessMsg] = useState('');
 
   if (!isOpen) return null;
 
+  const getExportData = async () => {
+    const paymentsByMonth = await Promise.all(
+      months.map((month) => apiService.getPayments(month.key))
+    );
+    const expensesWithPayments = expenses.map((expense) => ({
+      ...expense,
+      monthlyPayments: Object.fromEntries(
+        months.flatMap((month, index) => {
+          const payment = paymentsByMonth[index].find((item) => item.expenseId === expense.id);
+          return payment
+            ? [[month.key, {
+                ...payment,
+                amount: payment.amount == null ? null : Number(payment.amount),
+                paidDate: payment.paidDate ? payment.paidDate.slice(0, 10) : null,
+                note: payment.notes || '',
+              }]]
+            : [];
+        })
+      ),
+    }));
+
+    return {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      expenses: expensesWithPayments,
+      incomes,
+      banks,
+      categories,
+      months,
+    };
+  };
+
   // Export JSON
-  const handleExportJSON = () => {
-    const data = storageService.exportAllData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `finanztitan_backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setSuccessMsg('Copia de seguridad descargada.');
+  const handleExportJSON = async () => {
+    try {
+      const data = await getExportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `finanztitan_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      setSuccessMsg('Copia de seguridad descargada.');
+    } catch (error) {
+      setSuccessMsg(error.message);
+    }
   };
 
   // Export CSV
-  const handleExportCSV = () => {
-    const data = storageService.exportAllData();
-    let csv = 'Banco,Gasto,Fecha Corte,Fecha Max Pago,Estimado';
-    months.forEach((m) => {
-      csv += `,${m.label || m.key}`;
-    });
-    csv += '\n';
-
-    data.expenses.forEach((e) => {
-      const bank = data.banks.find((b) => b.id === e.bankId)?.name || e.bankId;
-      csv += `"${bank}","${e.name}",${e.billingDay},${e.dueDay},${e.estimatedAmount}`;
+  const handleExportCSV = async () => {
+    try {
+      const data = await getExportData();
+      let csv = 'Banco,Gasto,Fecha Corte,Fecha Max Pago,Estimado';
       months.forEach((m) => {
-        const p = e.monthlyPayments?.[m.key];
-        const val = p?.amount !== undefined ? p.amount : e.estimatedAmount;
-        csv += `,${val}`;
+        csv += `,${m.label || m.key}`;
       });
       csv += '\n';
-    });
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `finanztitan_gastos_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setSuccessMsg('Archivo CSV para Excel generado.');
+      data.expenses.forEach((e) => {
+        const bank = data.banks.find((b) => b.id === e.bankId)?.name || e.bankId || '';
+        csv += `"${bank}","${e.name}",${e.billingDay},${e.dueDay},${e.estimatedAmount}`;
+        months.forEach((m) => {
+          const p = e.monthlyPayments?.[m.key];
+          const val = p?.amount != null ? p.amount : e.estimatedAmount;
+          csv += `,${val}`;
+        });
+        csv += '\n';
+      });
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `finanztitan_gastos_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      setSuccessMsg('Archivo CSV para Excel generado.');
+    } catch (error) {
+      setSuccessMsg(error.message);
+    }
   };
 
   return (
@@ -111,7 +156,7 @@ export const DataExportModal = ({
                   Exportar Backup Completo (JSON)
                 </span>
                 <span className="text-[11px] text-metal-400">
-                  Incluye gastos, historial de pagos, sueldos y bancos.
+                  Incluye gastos, pagos de meses disponibles, ingresos y bancos.
                 </span>
               </div>
             </div>

@@ -19,7 +19,7 @@ La aplicación usa [GastosPersonalesBackend](https://github.com/developerrm/Gast
 2. Configura `VITE_API_URL` con la URL pública del backend y `VITE_GOOGLE_CLIENT_ID` con el mismo cliente OAuth configurado en el backend.
 3. Añade el origen del frontend a `CORS_ORIGINS` en el backend e inicia sesión con Google.
 
-Las preferencias visuales y los meses de navegación permanecen en el almacenamiento local del navegador. La API actual permite crear bancos y categorías, pero no editarlos ni eliminarlos; la restauración de backups todavía no se ofrece desde la interfaz.
+Las preferencias visuales y los meses de navegación permanecen en el almacenamiento local del navegador. Los datos locales que ya existían no se migran ni se sobrescriben automáticamente. La API actual permite crear bancos y categorías, pero no editarlos ni eliminarlos; la restauración de backups todavía no se ofrece desde la interfaz.
 
 ## 🛠️ Tecnologías
 

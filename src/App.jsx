@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { storageService } from './services/storageService';
 import { apiService } from './services/apiService';
 import { clearSession, getSession } from './services/authService';
@@ -95,10 +95,6 @@ export function App() {
       setBanks(loadedBanks);
       setCategories(loadedCategories);
       setMonths(storageService.getMonths());
-      storageService.saveExpenses(normalizedExpenses);
-      storageService.saveIncomes(normalizedIncomes);
-      storageService.saveBanks(loadedBanks);
-      storageService.saveCategories(loadedCategories);
 
       const loadedTheme = themeService.getSettings();
       setThemeSettings(loadedTheme);
@@ -145,26 +141,70 @@ export function App() {
     setIsDueWidgetCollapsed(nextState);
   };
 
+  const handleRequestError = (error) => {
+    if (error.message.startsWith('La sesión venció')) {
+      handleLogout();
+      return;
+    }
+    alert(error.message);
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    setSession(null);
+    setExpenses([]);
+    setIncomes({});
+    setBanks([]);
+    setCategories([]);
+    setDataError('');
+    setActiveTab('matrix');
+    setIsExpenseModalOpen(false);
+    setIsIncomeModalOpen(false);
+    setIsQuickPayModalOpen(false);
+    setIsSqlModalOpen(false);
+    setIsDataModalOpen(false);
+    setEditingExpense(null);
+    setQuickPayExpense(null);
+  };
+
+  const handleLoginSuccess = () => {
+    setExpenses([]);
+    setIncomes({});
+    setBanks([]);
+    setCategories([]);
+    setDataError('');
+    setSession(getSession());
+    setIsLoading(true);
+  };
+
   const handleSaveExpense = async (expenseData) => {
     try {
       const savedExpense = expenseData.id
         ? await apiService.updateExpense(expenseData.id, expenseData)
         : await apiService.createExpense(expenseData);
+      const currentMonthPayment = savedExpense.id === expenseData.id
+        ? null
+        : (await apiService.getPayments(selectedMonth))
+          .find((payment) => payment.expenseId === savedExpense.id);
       setExpenses((current) => {
         const existing = current.find((expense) => expense.id === savedExpense.id);
         const updatedExpense = {
           ...savedExpense,
           estimatedAmount: Number(savedExpense.estimatedAmount),
-          monthlyPayments: existing?.monthlyPayments || {},
+          monthlyPayments: {
+            ...existing?.monthlyPayments,
+            ...(currentMonthPayment
+              ? { [selectedMonth]: normalizePayment(currentMonthPayment) }
+              : {}),
+          },
         };
         const updated = existing
           ? current.map((expense) => expense.id === savedExpense.id ? updatedExpense : expense)
           : [...current, updatedExpense];
-        storageService.saveExpenses(updated);
         return updated;
       });
     } catch (error) {
-      alert(error.message);
+      handleRequestError(error);
     }
   };
 
@@ -173,10 +213,9 @@ export function App() {
       apiService.deleteExpense(id).then(() => {
         setExpenses((current) => {
           const updated = current.filter((expense) => expense.id !== id);
-          storageService.saveExpenses(updated);
           return updated;
         });
-      }).catch((error) => alert(error.message));
+      }).catch(handleRequestError);
     }
   };
 
@@ -199,11 +238,10 @@ export function App() {
         const updated = current.map((item) => item.id === expenseId
           ? { ...item, monthlyPayments: { ...item.monthlyPayments, [monthKey]: savedPayment } }
           : item);
-        storageService.saveExpenses(updated);
         return updated;
       });
     } catch (error) {
-      alert(error.message);
+      handleRequestError(error);
     }
   };
 
@@ -216,11 +254,10 @@ export function App() {
       }));
       setIncomes((current) => {
         const updated = { ...current, [monthKey]: savedIncome };
-        storageService.saveIncomes(updated);
         return updated;
       });
     } catch (error) {
-      alert(error.message);
+      handleRequestError(error);
     }
   };
 
@@ -229,11 +266,10 @@ export function App() {
       const savedBank = await apiService.createBank(bankData);
       setBanks((current) => {
         const updated = [...current, savedBank];
-        storageService.saveBanks(updated);
         return updated;
       });
     } catch (error) {
-      alert(error.message);
+      handleRequestError(error);
     }
   };
 
@@ -242,11 +278,10 @@ export function App() {
       const savedCategory = await apiService.createCategory(categoryData);
       setCategories((current) => {
         const updated = [...current, savedCategory];
-        storageService.saveCategories(updated);
         return updated;
       });
     } catch (error) {
-      alert(error.message);
+      handleRequestError(error);
     }
   };
 
@@ -266,10 +301,7 @@ export function App() {
   };
 
   if (!session) {
-    return <LoginPage onLoginSuccess={() => {
-      setSession(getSession());
-      setIsLoading(true);
-    }} />;
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
   if (isLoading && expenses.length === 0 && !dataError) {
@@ -287,7 +319,7 @@ export function App() {
         <button onClick={loadData} className="metallic-btn-gold px-4 py-2 rounded-xl text-sm font-bold">
           Reintentar
         </button>
-        <button onClick={() => { clearSession(); setSession(null); }} className="text-sm text-metal-400 hover:text-white">
+        <button onClick={handleLogout} className="text-sm text-metal-400 hover:text-white">
           Cerrar sesión
         </button>
       </div>
@@ -483,7 +515,7 @@ export function App() {
             <span>•</span>
             <span className="text-metal-400">{session.user.email}</span>
             <button
-              onClick={() => { clearSession(); setSession(null); }}
+              onClick={handleLogout}
               className="hover:text-rose-400 transition-colors"
             >
               Cerrar sesión
@@ -529,12 +561,16 @@ export function App() {
       <SqlMigrationModal
         isOpen={isSqlModalOpen}
         onClose={() => setIsSqlModalOpen(false)}
+        fullData={{ version: '1.0', exportedAt: new Date().toISOString(), expenses, incomes, banks, categories, months }}
       />
 
       <DataExportModal
         isOpen={isDataModalOpen}
         onClose={() => setIsDataModalOpen(false)}
         expenses={expenses}
+        incomes={incomes}
+        banks={banks}
+        categories={categories}
         months={months}
       />
     </div>
