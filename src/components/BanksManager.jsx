@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import {
   Building2,
   Plus,
-  Edit2,
-  Trash2,
-  Layers,
-  CreditCard,
   Tag,
-  Check,
-  X,
-  Palette
 } from 'lucide-react';
 import { formatMoney } from '../utils/formatters';
 
@@ -18,20 +11,18 @@ export const BanksManager = ({
   categories,
   expenses,
   onSaveBank,
-  onDeleteBank,
   onSaveCategory
 }) => {
   const [editingBank, setEditingBank] = useState(null);
   const [bankFormData, setBankFormData] = useState({
     id: '',
     name: '',
-    shortName: '',
     color: '#f59e0b',
     accountType: 'Cuenta de Ahorros',
     accountNumber: ''
   });
 
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [catFormData, setCatFormData] = useState({
     id: '',
     name: '',
@@ -48,7 +39,6 @@ export const BanksManager = ({
     const newBank = {
       ...bankFormData,
       id,
-      shortName: bankFormData.shortName || bankFormData.name,
       badgeClass: `bg-[${bankFormData.color}]/15 text-white border-white/20`
     };
 
@@ -57,16 +47,18 @@ export const BanksManager = ({
     setBankFormData({
       id: '',
       name: '',
-      shortName: '',
       color: '#f59e0b',
       accountType: 'Cuenta de Ahorros',
       accountNumber: ''
     });
   };
 
-  const startEditBank = (bank) => {
-    setEditingBank(bank.id);
-    setBankFormData(bank);
+  const handleCategorySubmit = (e) => {
+    e.preventDefault();
+    if (!catFormData.name.trim()) return;
+    onSaveCategory({ ...catFormData, name: catFormData.name.trim() });
+    setIsAddingCategory(false);
+    setCatFormData({ id: '', name: '', icon: 'Tag', color: '#38bdf8' });
   };
 
   return (
@@ -95,7 +87,6 @@ export const BanksManager = ({
                 setBankFormData({
                   id: '',
                   name: '',
-                  shortName: '',
                   color: '#f59e0b',
                   accountType: 'Cuenta de Ahorros',
                   accountNumber: ''
@@ -112,9 +103,7 @@ export const BanksManager = ({
         {/* Bank Edit / Add Form */}
         {editingBank && (
           <form onSubmit={handleBankSubmit} className="bg-metal-950 p-4 rounded-xl border border-amber-500/30 mb-6 space-y-4">
-            <h3 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-              {editingBank === 'new' ? 'Agregar Nuevo Banco' : 'Editar Banco'}
-            </h3>
+            <h3 className="text-xs font-bold text-amber-300 uppercase tracking-wider">Agregar Nuevo Banco</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
@@ -125,17 +114,6 @@ export const BanksManager = ({
                   placeholder="Ej. Banco Pichincha"
                   value={bankFormData.name}
                   onChange={(e) => setBankFormData({ ...bankFormData, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-metal-900 border border-white/10 text-white text-xs focus:border-amber-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-metal-300 mb-1">Nombre Corto / Alias</label>
-                <input
-                  type="text"
-                  placeholder="Ej. Pichincha"
-                  value={bankFormData.shortName}
-                  onChange={(e) => setBankFormData({ ...bankFormData, shortName: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-metal-900 border border-white/10 text-white text-xs focus:border-amber-400"
                 />
               </div>
@@ -153,6 +131,17 @@ export const BanksManager = ({
                   <option value="Efectivo / Billetera">Efectivo / Billetera</option>
                   <option value="Otro">Otro</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs text-metal-300 mb-1">Número de Cuenta</label>
+                <input
+                  type="text"
+                  placeholder="Opcional"
+                  value={bankFormData.accountNumber}
+                  onChange={(e) => setBankFormData({ ...bankFormData, accountNumber: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-metal-900 border border-white/10 text-white text-xs focus:border-amber-400"
+                />
               </div>
 
               <div>
@@ -208,22 +197,6 @@ export const BanksManager = ({
                       <span className="font-extrabold text-sm text-white">{bank.name}</span>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => startEditBank(bank)}
-                        className="p-1 rounded text-metal-400 hover:text-amber-400"
-                        title="Editar"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => onDeleteBank(bank.id)}
-                        className="p-1 rounded text-metal-400 hover:text-rose-400"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
                   </div>
 
                   <p className="text-xs text-metal-400 mb-3">{bank.accountType}</p>
@@ -251,7 +224,52 @@ export const BanksManager = ({
               Categorías para clasificar tus gastos fijos (Servicios, Tarjetas, Ahorro, Inversiones, Familia, etc.).
             </p>
           </div>
+          {!isAddingCategory && (
+            <button
+              onClick={() => setIsAddingCategory(true)}
+              className="metallic-btn-gold px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 ml-auto"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Nueva categoría
+            </button>
+          )}
         </div>
+
+        {isAddingCategory && (
+          <form onSubmit={handleCategorySubmit} className="bg-metal-950 p-4 rounded-xl border border-sky-500/30 mb-4 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-metal-300 mb-1">Nombre</label>
+              <input
+                type="text"
+                required
+                maxLength="100"
+                value={catFormData.name}
+                onChange={(e) => setCatFormData({ ...catFormData, name: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-metal-900 border border-white/10 text-white text-xs focus:border-sky-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-metal-300 mb-1">Icono</label>
+              <input
+                type="text"
+                maxLength="50"
+                value={catFormData.icon}
+                onChange={(e) => setCatFormData({ ...catFormData, icon: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl bg-metal-900 border border-white/10 text-white text-xs focus:border-sky-400"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={catFormData.color}
+                onChange={(e) => setCatFormData({ ...catFormData, color: e.target.value })}
+                className="w-10 h-8 rounded-lg bg-metal-900 border border-white/10 cursor-pointer p-0.5"
+              />
+              <button type="submit" className="metallic-btn-gold px-3 py-2 rounded-xl text-xs font-bold">Guardar</button>
+              <button type="button" onClick={() => setIsAddingCategory(false)} className="text-xs text-metal-400 hover:text-white">Cancelar</button>
+            </div>
+          </form>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {categories.map((cat) => {

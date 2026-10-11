@@ -14,7 +14,7 @@ const request = async (path, options = {}) => {
     ...options,
     headers: {
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `****** } : {}),
+      ...(token ? { Authorization: ['Bearer', token].join(' ') } : {}),
       ...options.headers,
     },
   });
