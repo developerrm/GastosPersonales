@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { storageService } from './services/storageService';
+import { apiService } from './services/apiService';
+import { clearSession, getSession } from './services/authService';
 import { themeService, DEFAULT_THEME_SETTINGS } from './services/themeService';
+import LoginPage from './components/LoginPage';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MonthSelector } from './components/MonthSelector';
@@ -18,9 +21,25 @@ import { SqlMigrationModal } from './components/SqlMigrationModal';
 import { DataExportModal } from './components/DataExportModal';
 import { ThemeCustomizerModal } from './components/ThemeCustomizerModal';
 
+const normalizePayment = (payment) => ({
+  ...payment,
+  amount: payment.amount == null ? null : Number(payment.amount),
+  paidDate: payment.paidDate ? payment.paidDate.slice(0, 10) : null,
+  note: payment.notes || '',
+});
+
+const normalizeIncome = (income) => ({
+  ...income,
+  baseSalary: Number(income.baseSalary),
+  extraIncome: Number(income.extraIncome),
+});
+
 export function App() {
+  const [session, setSession] = useState(() => getSession());
   const [activeTab, setActiveTab] = useState('matrix');
   const [selectedMonth, setSelectedMonth] = useState('2026-09');
+  const [isLoading, setIsLoading] = useState(Boolean(getSession()));
+  const [dataError, setDataError] = useState('');
 
   // Core Data States
   const [expenses, setExpenses] = useState([]);
@@ -46,33 +65,59 @@ export function App() {
   const [editingExpense, setEditingExpense] = useState(null);
   const [quickPayExpense, setQuickPayExpense] = useState(null);
 
-  // Load Initial Data & Theme
-  const loadData = () => {
-    const loadedExpenses = storageService.getExpenses();
-    const loadedIncomes = storageService.getIncomes();
-    const loadedBanks = storageService.getBanks();
-    const loadedCategories = storageService.getCategories();
-    const loadedMonths = storageService.getMonths();
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setDataError('');
+    try {
+      const [loadedExpenses, loadedIncomes, loadedBanks, loadedCategories, loadedPayments] = await Promise.all([
+        apiService.getExpenses(),
+        apiService.getIncomes(),
+        apiService.getBanks(),
+        apiService.getCategories(),
+        apiService.getPayments(selectedMonth),
+      ]);
+      const paymentsByExpense = new Map(
+        loadedPayments.map((payment) => [payment.expenseId, normalizePayment(payment)])
+      );
+      const normalizedExpenses = loadedExpenses.map((expense) => ({
+        ...expense,
+        estimatedAmount: Number(expense.estimatedAmount),
+        monthlyPayments: {
+          [selectedMonth]: paymentsByExpense.get(expense.id) || {},
+        },
+      }));
+      const normalizedIncomes = Object.fromEntries(
+        loadedIncomes.map((income) => [income.monthKey, normalizeIncome(income)])
+      );
 
-    setExpenses(loadedExpenses);
-    setIncomes(loadedIncomes);
-    setBanks(loadedBanks);
-    setCategories(loadedCategories);
-    setMonths(loadedMonths);
+      setExpenses(normalizedExpenses);
+      setIncomes(normalizedIncomes);
+      setBanks(loadedBanks);
+      setCategories(loadedCategories);
+      setMonths(storageService.getMonths());
 
-    // Initialize Theme settings
-    const loadedTheme = themeService.getSettings();
-    setThemeSettings(loadedTheme);
-    themeService.applyToDOM(loadedTheme);
-    if (loadedTheme.minimalistMode) {
-      setIsKpiCollapsed(true);
-      setIsDueWidgetCollapsed(true);
+      const loadedTheme = themeService.getSettings();
+      setThemeSettings(loadedTheme);
+      themeService.applyToDOM(loadedTheme);
+      if (loadedTheme.minimalistMode) {
+        setIsKpiCollapsed(true);
+        setIsDueWidgetCollapsed(true);
+      }
+    } catch (error) {
+      if (error.message.startsWith('La sesión venció')) {
+        clearSession();
+        setSession(null);
+      } else {
+        setDataError(error.message);
+      }
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [selectedMonth]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (session) loadData();
+  }, [session, loadData]);
 
   // --- HANDLERS ---
   const handleSaveThemeSettings = (newSettings) => {
@@ -96,15 +141,81 @@ export function App() {
     setIsDueWidgetCollapsed(nextState);
   };
 
-  const handleSaveExpense = (expenseData) => {
-    const updated = storageService.saveExpense(expenseData);
-    setExpenses(updated);
+  const handleRequestError = (error) => {
+    if (error.message.startsWith('La sesión venció')) {
+      handleLogout();
+      return;
+    }
+    alert(error.message);
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    setSession(null);
+    setExpenses([]);
+    setIncomes({});
+    setBanks([]);
+    setCategories([]);
+    setDataError('');
+    setActiveTab('matrix');
+    setIsExpenseModalOpen(false);
+    setIsIncomeModalOpen(false);
+    setIsQuickPayModalOpen(false);
+    setIsSqlModalOpen(false);
+    setIsDataModalOpen(false);
+    setEditingExpense(null);
+    setQuickPayExpense(null);
+  };
+
+  const handleLoginSuccess = () => {
+    setExpenses([]);
+    setIncomes({});
+    setBanks([]);
+    setCategories([]);
+    setDataError('');
+    setSession(getSession());
+    setIsLoading(true);
+  };
+
+  const handleSaveExpense = async (expenseData) => {
+    try {
+      const savedExpense = expenseData.id
+        ? await apiService.updateExpense(expenseData.id, expenseData)
+        : await apiService.createExpense(expenseData);
+      const currentMonthPayment = savedExpense.id === expenseData.id
+        ? null
+        : (await apiService.getPayments(selectedMonth))
+          .find((payment) => payment.expenseId === savedExpense.id);
+      setExpenses((current) => {
+        const existing = current.find((expense) => expense.id === savedExpense.id);
+        const updatedExpense = {
+          ...savedExpense,
+          estimatedAmount: Number(savedExpense.estimatedAmount),
+          monthlyPayments: {
+            ...existing?.monthlyPayments,
+            ...(currentMonthPayment
+              ? { [selectedMonth]: normalizePayment(currentMonthPayment) }
+              : {}),
+          },
+        };
+        const updated = existing
+          ? current.map((expense) => expense.id === savedExpense.id ? updatedExpense : expense)
+          : [...current, updatedExpense];
+        return updated;
+      });
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleDeleteExpense = (id) => {
     if (window.confirm('¿Estás seguro de eliminar este gasto fijo?')) {
-      const updated = storageService.deleteExpense(id);
-      setExpenses(updated);
+      apiService.deleteExpense(id).then(() => {
+        setExpenses((current) => {
+          const updated = current.filter((expense) => expense.id !== id);
+          return updated;
+        });
+      }).catch(handleRequestError);
     }
   };
 
@@ -114,29 +225,63 @@ export function App() {
       id: `exp-${Date.now()}`,
       name: `${exp.name} (Copia)`
     };
-    const updated = storageService.saveExpense(duplicate);
-    setExpenses(updated);
+    handleSaveExpense(duplicate);
   };
 
-  const handleUpdatePayment = (expenseId, monthKey, paymentData) => {
-    const updated = storageService.updateMonthlyPayment(expenseId, monthKey, paymentData);
-    setExpenses(updated);
+  const handleUpdatePayment = async (expenseId, monthKey, paymentData) => {
+    try {
+      const expense = expenses.find((item) => item.id === expenseId);
+      const paymentId = expense?.monthlyPayments?.[monthKey]?.id;
+      if (!paymentId) throw new Error('No se encontró el pago mensual para actualizar.');
+      const savedPayment = normalizePayment(await apiService.updatePayment(paymentId, paymentData));
+      setExpenses((current) => {
+        const updated = current.map((item) => item.id === expenseId
+          ? { ...item, monthlyPayments: { ...item.monthlyPayments, [monthKey]: savedPayment } }
+          : item);
+        return updated;
+      });
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
-  const handleSaveIncome = (monthKey, incomeData) => {
-    const updated = storageService.updateMonthlyIncome(monthKey, incomeData);
-    setIncomes(updated);
+  const handleSaveIncome = async (monthKey, incomeData) => {
+    try {
+      const savedIncome = normalizeIncome(await apiService.saveIncome({
+        ...incomeData,
+        monthKey,
+        id: incomes[monthKey]?.id,
+      }));
+      setIncomes((current) => {
+        const updated = { ...current, [monthKey]: savedIncome };
+        return updated;
+      });
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
-  const handleSaveBank = (bankData) => {
-    const updated = storageService.saveBank(bankData);
-    setBanks(updated);
+  const handleSaveBank = async (bankData) => {
+    try {
+      const savedBank = await apiService.createBank(bankData);
+      setBanks((current) => {
+        const updated = [...current, savedBank];
+        return updated;
+      });
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
-  const handleDeleteBank = (bankId) => {
-    if (window.confirm('¿Eliminar esta institución bancaria?')) {
-      const updated = storageService.deleteBank(bankId);
-      setBanks(updated);
+  const handleSaveCategory = async (categoryData) => {
+    try {
+      const savedCategory = await apiService.createCategory(categoryData);
+      setCategories((current) => {
+        const updated = [...current, savedCategory];
+        return updated;
+      });
+    } catch (error) {
+      handleRequestError(error);
     }
   };
 
@@ -154,6 +299,32 @@ export function App() {
     setQuickPayExpense(exp);
     setIsQuickPayModalOpen(true);
   };
+
+  if (!session) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  if (isLoading && expenses.length === 0 && !dataError) {
+    return (
+      <div className="min-h-screen bg-metal-950 text-metal-100 flex items-center justify-center">
+        <p className="text-sm text-metal-300">Conectando con tus datos...</p>
+      </div>
+    );
+  }
+
+  if (dataError && expenses.length === 0 && banks.length === 0 && categories.length === 0) {
+    return (
+      <div className="min-h-screen bg-metal-950 text-metal-100 flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-rose-300">{dataError}</p>
+        <button onClick={loadData} className="metallic-btn-gold px-4 py-2 rounded-xl text-sm font-bold">
+          Reintentar
+        </button>
+        <button onClick={handleLogout} className="text-sm text-metal-400 hover:text-white">
+          Cerrar sesión
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-metal-950 text-metal-100 flex flex-col antialiased selection:bg-amber-500/30 selection:text-amber-200">
@@ -200,6 +371,11 @@ export function App() {
       {/* 3. Main Content Wrapper with dynamic left margin for Sidebar */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+          {dataError && (
+            <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+              {dataError}
+            </p>
+          )}
           {/* Month Selector Timeline */}
           <MonthSelector
           selectedMonth={selectedMonth}
@@ -301,8 +477,7 @@ export function App() {
               categories={categories}
               expenses={expenses}
               onSaveBank={handleSaveBank}
-              onDeleteBank={handleDeleteBank}
-              onSaveCategory={() => {}}
+              onSaveCategory={handleSaveCategory}
             />
           )}
         </div>
@@ -336,6 +511,14 @@ export function App() {
               className="hover:text-emerald-400 transition-colors"
             >
               Exportar Datos
+            </button>
+            <span>•</span>
+            <span className="text-metal-400">{session.user.email}</span>
+            <button
+              onClick={handleLogout}
+              className="hover:text-rose-400 transition-colors"
+            >
+              Cerrar sesión
             </button>
           </div>
         </div>
@@ -378,14 +561,17 @@ export function App() {
       <SqlMigrationModal
         isOpen={isSqlModalOpen}
         onClose={() => setIsSqlModalOpen(false)}
+        fullData={{ version: '1.0', exportedAt: new Date().toISOString(), expenses, incomes, banks, categories, months }}
       />
 
       <DataExportModal
         isOpen={isDataModalOpen}
         onClose={() => setIsDataModalOpen(false)}
         expenses={expenses}
+        incomes={incomes}
+        banks={banks}
+        categories={categories}
         months={months}
-        onDataReloaded={loadData}
       />
     </div>
     </div>

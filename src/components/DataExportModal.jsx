@@ -1,99 +1,110 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   X,
   Download,
-  Upload,
-  RefreshCw,
   FileSpreadsheet,
   FileJson,
-  AlertTriangle,
   Check
 } from 'lucide-react';
-import { storageService } from '../services/storageService';
+import { apiService } from '../services/apiService';
 
 export const DataExportModal = ({
   isOpen,
   onClose,
   expenses,
-  months,
-  onDataReloaded
+  incomes,
+  banks,
+  categories,
+  months
 }) => {
-  const [importError, setImportError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
   if (!isOpen) return null;
 
+  const getExportData = async () => {
+    const paymentsByMonth = await Promise.all(
+      months.map((month) => apiService.getPayments(month.key))
+    );
+    const expensesWithPayments = expenses.map((expense) => ({
+      ...expense,
+      monthlyPayments: Object.fromEntries(
+        months.flatMap((month, index) => {
+          const payment = paymentsByMonth[index].find((item) => item.expenseId === expense.id);
+          return payment
+            ? [[month.key, {
+                ...payment,
+                amount: payment.amount == null ? null : Number(payment.amount),
+                paidDate: payment.paidDate ? payment.paidDate.slice(0, 10) : null,
+                note: payment.notes || '',
+              }]]
+            : [];
+        })
+      ),
+    }));
+
+    return {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      expenses: expensesWithPayments,
+      incomes,
+      banks,
+      categories,
+      months,
+    };
+  };
+
   // Export JSON
-  const handleExportJSON = () => {
-    const data = storageService.exportAllData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `finanztitan_backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setSuccessMsg('Copia de seguridad descargada.');
+  const handleExportJSON = async () => {
+    try {
+      const data = await getExportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `finanztitan_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      setSuccessMsg('Copia de seguridad descargada.');
+    } catch (error) {
+      setSuccessMsg(error.message);
+    }
   };
 
   // Export CSV
-  const handleExportCSV = () => {
-    const data = storageService.exportAllData();
-    let csv = 'Banco,Gasto,Fecha Corte,Fecha Max Pago,Estimado';
-    months.forEach((m) => {
-      csv += `,${m.label || m.key}`;
-    });
-    csv += '\n';
-
-    data.expenses.forEach((e) => {
-      const bank = data.banks.find((b) => b.id === e.bankId)?.name || e.bankId;
-      csv += `"${bank}","${e.name}",${e.billingDay},${e.dueDay},${e.estimatedAmount}`;
+  const handleExportCSV = async () => {
+    try {
+      const data = await getExportData();
+      let csv = 'Banco,Gasto,Fecha Corte,Fecha Max Pago,Estimado';
       months.forEach((m) => {
-        const p = e.monthlyPayments?.[m.key];
-        const val = p?.amount !== undefined ? p.amount : e.estimatedAmount;
-        csv += `,${val}`;
+        csv += `,${m.label || m.key}`;
       });
       csv += '\n';
-    });
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `finanztitan_gastos_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setSuccessMsg('Archivo CSV para Excel generado.');
-  };
+      data.expenses.forEach((e) => {
+        const bank = data.banks.find((b) => b.id === e.bankId)?.name || e.bankId || '';
+        csv += `"${bank}","${e.name}",${e.billingDay},${e.dueDay},${e.estimatedAmount}`;
+        months.forEach((m) => {
+          const p = e.monthlyPayments?.[m.key];
+          const val = p?.amount != null ? p.amount : e.estimatedAmount;
+          csv += `,${val}`;
+        });
+        csv += '\n';
+      });
 
-  // Import JSON
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result);
-        storageService.importAllData(json);
-        setSuccessMsg('¡Datos importados con éxito!');
-        setImportError('');
-        onDataReloaded();
-      } catch (err) {
-        setImportError('Error al procesar el archivo JSON: formato incompatible.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  // Reset to default
-  const handleReset = () => {
-    if (window.confirm('¿Seguro que deseas reiniciar todos los datos a la plantilla inicial de Excel? Se borrarán los cambios personalizados.')) {
-      storageService.resetAllData();
-      onDataReloaded();
-      setSuccessMsg('Datos restaurados a los valores iniciales.');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `finanztitan_gastos_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      setSuccessMsg('Archivo CSV para Excel generado.');
+    } catch (error) {
+      setSuccessMsg(error.message);
     }
   };
 
@@ -130,13 +141,6 @@ export const DataExportModal = ({
             <span>{successMsg}</span>
           </div>
         )}
-        {importError && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            <span>{importError}</span>
-          </div>
-        )}
-
         <div className="space-y-3">
           {/* Export JSON Button */}
           <button
@@ -152,7 +156,7 @@ export const DataExportModal = ({
                   Exportar Backup Completo (JSON)
                 </span>
                 <span className="text-[11px] text-metal-400">
-                  Incluye gastos, historial de pagos, sueldos y bancos.
+                  Incluye gastos, pagos de meses disponibles, ingresos y bancos.
                 </span>
               </div>
             </div>
@@ -180,39 +184,9 @@ export const DataExportModal = ({
             <Download className="w-4 h-4 text-metal-400 group-hover:text-emerald-400" />
           </button>
 
-          {/* Import JSON File */}
-          <div className="p-3 rounded-xl bg-metal-950/80 border border-white/10">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div className="p-2 rounded-lg bg-metal-900 text-sky-400">
-                <Upload className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <span className="font-bold text-white text-xs block">
-                  Restaurar desde Archivo JSON
-                </span>
-                <span className="text-[11px] text-metal-400">
-                  Carga un backup previo generado en FinanzTitan.
-                </span>
-              </div>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Reset data */}
-          <div className="pt-2">
-            <button
-              onClick={handleReset}
-              className="w-full p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 transition-all"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Restaurar Datos de Ejemplo (Excel)</span>
-            </button>
-          </div>
+          <p className="text-[11px] text-metal-400">
+            La restauración de copias no está disponible con los endpoints actuales del backend.
+          </p>
         </div>
 
         {/* Footer */}
