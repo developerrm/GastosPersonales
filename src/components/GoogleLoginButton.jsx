@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { loginWithGoogle, saveSession, getToken, clearSession } from '../services/authService';
+import { loginWithGoogle, saveSession } from '../services/authService';
 
 export default function GoogleLoginButton({ onSuccess, className = '' }) {
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = () => {
     setLoading(true);
+
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+      alert('Configura VITE_GOOGLE_CLIENT_ID en el frontend');
+      setLoading(false);
+      return;
+    }
 
     if (!window.google || !window.google.accounts) {
       alert('Google SDK no está cargado');
