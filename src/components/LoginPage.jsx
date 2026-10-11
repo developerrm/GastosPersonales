@@ -15,7 +15,7 @@ export default function LoginPage({ onLoginSuccess }) {
         <GoogleLoginButton onSuccess={onLoginSuccess} />
 
         <div className="mt-6 rounded-xl border border-slate-700 bg-slate-800/60 p-3 text-xs text-slate-400">
-          Requiere tu Google Client ID configurado en el archivo <strong>.env</strong> del frontend.
+          Configura <strong>VITE_GOOGLE_CLIENT_ID</strong> y <strong>VITE_API_URL</strong> en el archivo <strong>.env</strong> del frontend.
         </div>
       </div>
     </div>

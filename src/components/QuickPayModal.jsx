@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import {
   X,
@@ -22,7 +22,7 @@ export const QuickPayModal = ({
   if (!isOpen || !expense) return null;
 
   const currentPayment = expense.monthlyPayments?.[selectedMonth] || {};
-  const initialAmount = currentPayment.amount !== undefined ? currentPayment.amount : expense.estimatedAmount;
+  const initialAmount = currentPayment.amount != null ? currentPayment.amount : expense.estimatedAmount;
   const initialStatus = currentPayment.status || 'paid';
   const initialDate = currentPayment.paidDate || new Date().toISOString().split('T')[0];
 
