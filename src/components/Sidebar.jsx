@@ -249,6 +249,7 @@ export const Sidebar = ({
         <div className="grid grid-cols-2 gap-1.5 pt-1">
           <button
             onClick={onOpenSqlModal}
+            hidden
             className="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border text-sky-500 hover:brightness-110 transition-all"
             style={{
               backgroundColor: 'var(--color-bg-card-solid)',
