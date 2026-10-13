@@ -185,6 +185,7 @@ export const Navbar = ({
             <button
               onClick={onOpenSqlModal}
               title="Generar Script y Schema MySQL"
+              hidden
               className="p-2 rounded-xl border transition-all shadow-sm"
               style={{
                 backgroundColor: 'var(--color-bg-card-solid)',
@@ -327,6 +328,7 @@ export const Navbar = ({
                 onOpenSqlModal();
                 setMobileMenuOpen(false);
               }}
+              hidden
               className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[11px] border text-sky-500"
               style={{
                 backgroundColor: 'var(--color-bg-card-solid)',

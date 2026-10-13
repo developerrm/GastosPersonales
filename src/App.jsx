@@ -500,13 +500,6 @@ export function App() {
             </button>
             <span>•</span>
             <button
-              onClick={() => setIsSqlModalOpen(true)}
-              className="hover:text-sky-400 transition-colors"
-            >
-              Schema MySQL
-            </button>
-            <span>•</span>
-            <button
               onClick={() => setIsDataModalOpen(true)}
               className="hover:text-emerald-400 transition-colors"
             >
