@@ -211,6 +211,19 @@ export const Navbar = ({
               <Download className="w-3.5 h-3.5" />
             </button>
 
+            <button
+              onClick={onLogout}
+              title="Cerrar sesión"
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold border transition-all shadow-sm text-rose-500"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Cerrar sesión</span>
+            </button>
+
             {/* Add Expense Primary Button */}
             <button
               onClick={onOpenExpenseModal}
@@ -233,6 +246,17 @@ export const Navbar = ({
               title="Personalizar Tema"
             >
               <Palette className="w-4 h-4" style={{ color: currentTheme.primaryColor }} />
+            </button>
+            <button
+              onClick={onLogout}
+              className="p-2 rounded-xl border text-rose-500"
+              style={{
+                backgroundColor: 'var(--color-bg-card-solid)',
+                borderColor: 'var(--color-border)'
+              }}
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
             <button
               onClick={onOpenExpenseModal}
