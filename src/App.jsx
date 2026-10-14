@@ -342,6 +342,7 @@ export function App() {
         onOpenDataModal={() => setIsDataModalOpen(true)}
         onOpenThemeModal={() => setIsThemeModalOpen(true)}
         onToggleMinimalist={handleToggleMinimalist}
+        onLogout={handleLogout}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
@@ -365,6 +366,7 @@ export function App() {
           onOpenBanksModal={() => setActiveTab('banks')}
           onOpenThemeModal={() => setIsThemeModalOpen(true)}
           onToggleMinimalist={handleToggleMinimalist}
+          onLogout={handleLogout}
         />
       </div>
 

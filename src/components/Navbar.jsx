@@ -14,6 +14,7 @@ import {
   Table,
   CreditCard,
   Palette,
+  LogOut,
   Sparkles,
   Minimize2,
   Maximize2
@@ -33,7 +34,8 @@ export const Navbar = ({
   onOpenDataModal,
   onOpenBanksModal,
   onOpenThemeModal,
-  onToggleMinimalist
+  onToggleMinimalist,
+  onLogout
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -353,6 +355,17 @@ export const Navbar = ({
               <span>Backup</span>
             </button>
           </div>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              onLogout();
+            }}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold border text-rose-500"
+            style={{ borderColor: 'var(--color-border)' }}
+          >
+            <LogOut className="w-4 h-4" />
+            Cerrar sesión
+          </button>
         </div>
       )}
     </header>
