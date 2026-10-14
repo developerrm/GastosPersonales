@@ -252,6 +252,7 @@ export const Sidebar = ({
             hidden
             className="flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-semibold border text-sky-500 hover:brightness-110 transition-all"
             style={{
+              display: 'none',
               backgroundColor: 'var(--color-bg-card-solid)',
               borderColor: 'var(--color-border)'
             }}

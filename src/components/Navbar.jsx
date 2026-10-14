@@ -188,6 +188,7 @@ export const Navbar = ({
               hidden
               className="p-2 rounded-xl border transition-all shadow-sm"
               style={{
+                display: 'none',
                 backgroundColor: 'var(--color-bg-card-solid)',
                 borderColor: 'var(--color-border)'
               }}
@@ -331,6 +332,7 @@ export const Navbar = ({
               hidden
               className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-[11px] border text-sky-500"
               style={{
+                display: 'none',
                 backgroundColor: 'var(--color-bg-card-solid)',
                 borderColor: 'var(--color-border)'
               }}
