@@ -12,6 +12,7 @@ import {
   Table,
   CreditCard,
   Palette,
+  LogOut,
   Sparkles,
   Minimize2,
   Maximize2,
@@ -30,6 +31,7 @@ export const Sidebar = ({
   onOpenSqlModal,
   onOpenDataModal,
   onOpenThemeModal,
+  onLogout,
   onToggleMinimalist,
   isSidebarCollapsed,
   onToggleSidebar
@@ -197,6 +199,22 @@ export const Sidebar = ({
             className="w-3 h-3 rounded-full border border-black/15 shrink-0 shadow-sm"
             style={{ backgroundColor: currentTheme.primaryColor }}
           />
+        </button>
+
+        {/* Logout */}
+        <button
+          onClick={onLogout}
+          title="Cerrar sesión"
+          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold border transition-all hover:text-rose-500 ${
+            isSidebarCollapsed ? 'justify-center' : 'justify-start'
+          }`}
+          style={{
+            backgroundColor: 'var(--color-bg-card-solid)',
+            borderColor: 'var(--color-border)'
+          }}
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          {!isSidebarCollapsed && <span>Cerrar sesión</span>}
         </button>
 
         {/* Minimalist Toggle */}
