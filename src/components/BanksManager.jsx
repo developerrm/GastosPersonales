@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Building2,
   Plus,
+  Trash2,
   Tag,
 } from 'lucide-react';
 import { formatMoney } from '../utils/formatters';
@@ -11,7 +12,9 @@ export const BanksManager = ({
   categories,
   expenses,
   onSaveBank,
-  onSaveCategory
+  onSaveCategory,
+  onDeleteBank,
+  onDeleteCategory
 }) => {
   const [editingBank, setEditingBank] = useState(null);
   const [bankFormData, setBankFormData] = useState({
@@ -55,6 +58,14 @@ export const BanksManager = ({
     onSaveCategory({ ...catFormData, name: catFormData.name.trim() });
     setIsAddingCategory(false);
     setCatFormData({ id: '', name: '', icon: 'Tag', color: '#38bdf8' });
+  };
+
+  const confirmDelete = (kind, item, count, onDelete) => {
+    if (count > 0) {
+      window.alert(`No se puede eliminar "${item.name}": tiene ${count} gasto(s) vinculado(s).`);
+      return;
+    }
+    if (window.confirm(`¿Eliminar ${kind} "${item.name}"?`)) onDelete(item.id);
   };
 
   return (
@@ -191,7 +202,15 @@ export const BanksManager = ({
                       />
                       <span className="font-extrabold text-sm text-white">{bank.name}</span>
                     </div>
-
+                    <button
+                      type="button"
+                      title="Eliminar banco"
+                      aria-label={`Eliminar banco ${bank.name}`}
+                      onClick={() => confirmDelete('banco', bank, attachedExpenses.length, onDeleteBank)}
+                      className="p-1 rounded-lg text-red-400 hover:bg-red-500/15 border border-white/10 shrink-0"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
 
                   <p className="text-xs text-metal-400 mb-3">{bank.accountType}</p>
@@ -281,7 +300,18 @@ export const BanksManager = ({
                   />
                   <span className="font-bold text-xs text-white">{cat.name}</span>
                 </div>
-                <span className="text-[11px] text-metal-400 font-mono">{count}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-metal-400 font-mono">{count}</span>
+                  <button
+                    type="button"
+                    title="Eliminar categoría"
+                    aria-label={`Eliminar categoría ${cat.name}`}
+                    onClick={() => confirmDelete('categoría', cat, count, onDeleteCategory)}
+                    className="p-1 rounded-lg text-red-400 hover:bg-red-500/15 border border-white/10 shrink-0"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             );
           })}
