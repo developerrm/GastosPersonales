@@ -103,3 +103,7 @@ Abre `src/index.css` y crea un nuevo bloque para tu tema utilizando el selector 
 ```
 
 La aplicación leerá tu tema de forma automática en el selector de la Interfaz y `colorEngine.js` ajustará textos en las tablas gracias al campo `category`.
+
+## Nuevas paletas y modo claro/oscuro
+
+`themeService.applyToDOM` define `data-mode="light"|"dark"` en `<html>` según el `category` del tema. Los overrides de modo claro en `src/index.css` usan `[data-mode="light"]`, por lo que cualquier paleta nueva con `category: 'light'` hereda automáticamente fondos, textos y bordes legibles en todas las pages (incluidas las clases `bg-metal-*`, `text-metal-*` y `border-white/*` con cualquier opacidad). Solo debes definir sus variables `--color-*` en `[data-theme="id"]`.
