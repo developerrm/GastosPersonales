@@ -252,9 +252,7 @@
    GRAPHIC DESIGN OVERRIDES FOR LIGHT, ROSE & CUPCAKE PALETTES
    =================================================== */
 
-[data-theme="rose"],
-[data-theme="cupcake"],
-[data-theme="light"] {
+[data-mode="light"] {
   /* Container & canvas overrides */
   .min-h-screen {
     background-color: var(--color-bg-body) !important;
@@ -294,6 +292,32 @@
   .bg-metal-800\/40 {
     background-color: var(--color-bg-card-hover) !important;
     color: var(--color-text-main) !important;
+  }
+
+  /* Catch-all for any opacity/shade variant of the dark metal surfaces */
+  [class*="bg-metal-9"],
+  [class*="bg-metal-8"] {
+    background-color: var(--color-bg-card-hover) !important;
+    color: var(--color-text-main) !important;
+  }
+
+  [class*="border-white/"] {
+    border-color: var(--color-border) !important;
+  }
+
+  [class*="hover:bg-metal-"]:hover,
+  [class*="hover:bg-white/"]:hover {
+    background-color: var(--color-bg-card-hover) !important;
+  }
+
+  [class*="text-metal-"]:not([class*="text-metal-4"]):not([class*="text-metal-5"]),
+  [class*="placeholder:text-metal-"] {
+    color: var(--color-text-main) !important;
+  }
+
+  [class*="text-metal-4"],
+  [class*="text-metal-5"] {
+    color: var(--color-text-muted) !important;
   }
 
   /* Replace hardcoded texts */

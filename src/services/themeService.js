@@ -178,7 +178,10 @@ export const themeService = {
     const body = document.body;
 
     // 1. Data attributes
-    root.setAttribute('data-theme', settings.theme || 'titanium');
+    const themeId = settings.theme || 'titanium';
+    const themeDef = THEMES.find((t) => t.id === themeId);
+    root.setAttribute('data-theme', themeId);
+    root.setAttribute('data-mode', themeDef?.category === 'light' ? 'light' : 'dark');
     root.setAttribute('data-radius', settings.borderRadius || 'modern');
     root.setAttribute('data-density', settings.density || 'balanced');
     root.setAttribute('data-card-style', settings.cardStyle || 'metallic');
