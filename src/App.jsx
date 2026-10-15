@@ -285,6 +285,32 @@ export function App() {
     }
   };
 
+  const handleDeleteBank = async (bankId) => {
+    if (expenses.some((e) => e.bankId === bankId)) {
+      handleRequestError(new Error('No se puede eliminar el banco: tiene gastos vinculados.'));
+      return;
+    }
+    try {
+      await apiService.deleteBank(bankId);
+      setBanks((current) => current.filter((b) => b.id !== bankId));
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (expenses.some((e) => e.categoryId === categoryId)) {
+      handleRequestError(new Error('No se puede eliminar la categoría: tiene gastos vinculados.'));
+      return;
+    }
+    try {
+      await apiService.deleteCategory(categoryId);
+      setCategories((current) => current.filter((c) => c.id !== categoryId));
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
   const handleAddNewMonth = (monthObj) => {
     const updated = storageService.addMonth(monthObj);
     setMonths(updated);
@@ -480,6 +506,8 @@ export function App() {
               expenses={expenses}
               onSaveBank={handleSaveBank}
               onSaveCategory={handleSaveCategory}
+              onDeleteBank={handleDeleteBank}
+              onDeleteCategory={handleDeleteCategory}
             />
           )}
         </div>

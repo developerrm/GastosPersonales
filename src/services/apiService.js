@@ -98,6 +98,8 @@ export const apiService = {
       }),
     }),
 
+  deleteBank: (id) => request(`/banks/${id}`, { method: 'DELETE' }),
+
   getCategories: () => request('/categories'),
   createCategory: (category) =>
     request('/categories', {
@@ -108,4 +110,5 @@ export const apiService = {
         color: category.color,
       }),
     }),
+  deleteCategory: (id) => request(`/categories/${id}`, { method: 'DELETE' }),
 };
