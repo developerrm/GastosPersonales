@@ -6,6 +6,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { formatMoney } from '../utils/formatters';
+import { confirmAction, showWarningAlert } from '../utils/alerts';
 
 export const BanksManager = ({
   banks,
@@ -60,12 +61,16 @@ export const BanksManager = ({
     setCatFormData({ id: '', name: '', icon: 'Tag', color: '#38bdf8' });
   };
 
-  const confirmDelete = (kind, item, count, onDelete) => {
+  const confirmDelete = async (kind, item, count, onDelete) => {
     if (count > 0) {
-      window.alert(`No se puede eliminar "${item.name}": tiene ${count} gasto(s) vinculado(s).`);
+      showWarningAlert(`No se puede eliminar "${item.name}": tiene ${count} gasto(s) vinculado(s).`);
       return;
     }
-    if (window.confirm(`¿Eliminar ${kind} "${item.name}"?`)) onDelete(item.id);
+    const confirmed = await confirmAction(
+      `¿Eliminar ${kind}?`,
+      `¿Eliminar ${kind} "${item.name}"?`
+    );
+    if (confirmed) onDelete(item.id);
   };
 
   return (
