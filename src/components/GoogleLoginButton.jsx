@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { loginWithGoogle, saveSession } from '../services/authService';
+import { showErrorAlert } from '../utils/alerts';
 
 export default function GoogleLoginButton({ onSuccess, className = '' }) {
   const [loading, setLoading] = useState(false);
@@ -8,13 +9,13 @@ export default function GoogleLoginButton({ onSuccess, className = '' }) {
     setLoading(true);
 
     if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-      alert('Configura VITE_GOOGLE_CLIENT_ID en el frontend');
+      showErrorAlert('Configura VITE_GOOGLE_CLIENT_ID en el frontend');
       setLoading(false);
       return;
     }
 
     if (!window.google || !window.google.accounts) {
-      alert('Google SDK no está cargado');
+      showErrorAlert('Google SDK no está cargado');
       setLoading(false);
       return;
     }
@@ -32,7 +33,7 @@ export default function GoogleLoginButton({ onSuccess, className = '' }) {
             window.location.href = '/';
           }
         } catch (error) {
-          alert(error.message || 'No se pudo iniciar sesión con Google');
+          showErrorAlert(error.message || 'No se pudo iniciar sesión con Google');
         } finally {
           setLoading(false);
         }

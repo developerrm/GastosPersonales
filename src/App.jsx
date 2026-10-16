@@ -20,6 +20,7 @@ import { QuickPayModal } from './components/QuickPayModal';
 import { SqlMigrationModal } from './components/SqlMigrationModal';
 import { DataExportModal } from './components/DataExportModal';
 import { ThemeCustomizerModal } from './components/ThemeCustomizerModal';
+import { confirmAction, showErrorAlert } from './utils/alerts';
 
 const normalizePayment = (payment) => ({
   ...payment,
@@ -146,7 +147,7 @@ export function App() {
       handleLogout();
       return;
     }
-    alert(error.message);
+    showErrorAlert(error.message);
   };
 
   const handleLogout = () => {
@@ -208,14 +209,18 @@ export function App() {
     }
   };
 
-  const handleDeleteExpense = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este gasto fijo?')) {
-      apiService.deleteExpense(id).then(() => {
-        setExpenses((current) => {
-          const updated = current.filter((expense) => expense.id !== id);
-          return updated;
-        });
-      }).catch(handleRequestError);
+  const handleDeleteExpense = async (id) => {
+    const confirmed = await confirmAction(
+      '¿Eliminar gasto fijo?',
+      '¿Estás seguro de eliminar este gasto fijo?'
+    );
+    if (!confirmed) return;
+
+    try {
+      await apiService.deleteExpense(id);
+      setExpenses((current) => current.filter((expense) => expense.id !== id));
+    } catch (error) {
+      handleRequestError(error);
     }
   };
 

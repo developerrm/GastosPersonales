@@ -7,6 +7,7 @@ import {
   Check
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
+import { showErrorAlert } from '../utils/alerts';
 
 export const DataExportModal = ({
   isOpen,
@@ -68,7 +69,7 @@ export const DataExportModal = ({
       setTimeout(() => URL.revokeObjectURL(url), 0);
       setSuccessMsg('Copia de seguridad descargada.');
     } catch (error) {
-      setSuccessMsg(error.message);
+      showErrorAlert(error.message);
     }
   };
 
@@ -104,7 +105,7 @@ export const DataExportModal = ({
       setTimeout(() => URL.revokeObjectURL(url), 0);
       setSuccessMsg('Archivo CSV para Excel generado.');
     } catch (error) {
-      setSuccessMsg(error.message);
+      showErrorAlert(error.message);
     }
   };
 
