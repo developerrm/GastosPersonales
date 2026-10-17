@@ -207,7 +207,32 @@ export const UpcomingDueWidget = ({
           <p className="text-xs text-metal-400">Todos los pagos bajo esta categoría están cubiertos.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <>
+        {/* Mobile carousel: compact tiles, 4 visible, swipe for more */}
+        <div className="md:hidden flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
+          {filteredList.map((item) => {
+            const alert = !item.isPaid && (item.urgency.status === 'critical' || item.urgency.status === 'overdue');
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onEditExpense(item)}
+                title={item.name}
+                className={`snap-start shrink-0 basis-[calc((100%-1.5rem)/4)] aspect-square rounded-lg border p-1 flex items-center justify-center text-center transition-all ${
+                  item.isPaid ? 'border-emerald-500/40 opacity-85' : alert ? 'border-rose-500/60' : ''
+                }`}
+                style={{
+                  backgroundColor: 'var(--color-bg-card)',
+                  borderColor: item.isPaid || alert ? undefined : 'var(--color-border)',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                <span className="text-[10px] font-bold leading-tight line-clamp-3 break-words">{item.name}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredList.map((item) => {
             return (
               <div
@@ -296,6 +321,7 @@ export const UpcomingDueWidget = ({
             );
           })}
         </div>
+        </>
       )}
     </div>
   );
