@@ -37,7 +37,7 @@ export const MetricCards = ({
   };
 
   // Current month income
-  const monthIncomeObj = incomes[selectedMonth] || { baseSalary: 1000, extraIncome: 0 };
+  const monthIncomeObj = incomes[selectedMonth] || { baseSalary: 0, extraIncome: 0 };
   const totalIncome = (Number(monthIncomeObj.baseSalary) || 0) + (Number(monthIncomeObj.extraIncome) || 0);
 
   // Calculate expenses stats for this month

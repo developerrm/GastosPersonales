@@ -113,7 +113,7 @@ export const storageService = {
     const updated = {
       ...incomes,
       [monthKey]: {
-        ...(incomes[monthKey] || { baseSalary: 1000, extraIncome: 0 }),
+        ...(incomes[monthKey] || { baseSalary: 0, extraIncome: 0 }),
         ...incomeData
       }
     };

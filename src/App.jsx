@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { storageService } from './services/storageService';
 import { apiService } from './services/apiService';
 import { clearSession, getSession } from './services/authService';
@@ -66,7 +66,11 @@ export function App() {
   const [editingExpense, setEditingExpense] = useState(null);
   const [quickPayExpense, setQuickPayExpense] = useState(null);
 
+  const sessionTokenRef = useRef(null);
+  sessionTokenRef.current = session?.token ?? session?.user?.email ?? null;
+
   const loadData = useCallback(async () => {
+    const requestOwner = sessionTokenRef.current;
     setIsLoading(true);
     setDataError('');
     try {
@@ -77,6 +81,7 @@ export function App() {
         apiService.getCategories(),
         apiService.getPayments(selectedMonth),
       ]);
+      if (sessionTokenRef.current !== requestOwner) return;
       const paymentsByExpense = new Map(
         loadedPayments.map((payment) => [payment.expenseId, normalizePayment(payment)])
       );
