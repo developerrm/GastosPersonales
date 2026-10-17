@@ -81,7 +81,7 @@ export const AnalyticsView = ({
   // 3. Multi-month Trend Cashflow Data
   const monthlyTrendsData = months.map((m) => {
     const mKey = m.key;
-    const incObj = incomes[mKey] || { baseSalary: 1000, extraIncome: 0 };
+    const incObj = incomes[mKey] || { baseSalary: 0, extraIncome: 0 };
     const income = (Number(incObj.baseSalary) || 0) + (Number(incObj.extraIncome) || 0);
 
     let totalGastos = 0;
@@ -102,7 +102,7 @@ export const AnalyticsView = ({
   });
 
   // Calculate Savings & Investment Ratio for selected month
-  const currentIncomeObj = incomes[selectedMonth] || { baseSalary: 1000, extraIncome: 0 };
+  const currentIncomeObj = incomes[selectedMonth] || { baseSalary: 0, extraIncome: 0 };
   const currentIncome = (Number(currentIncomeObj.baseSalary) || 0) + (Number(currentIncomeObj.extraIncome) || 0);
 
   let currentAhorroInversion = 0;

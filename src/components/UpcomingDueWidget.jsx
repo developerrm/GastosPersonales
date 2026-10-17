@@ -214,16 +214,21 @@ export const UpcomingDueWidget = ({
                 key={item.id}
                 className={`relative rounded-xl p-3.5 border transition-all duration-200 ${
                   item.isPaid
-                    ? 'bg-metal-900/40 border-emerald-500/20 opacity-85'
+                    ? 'border-emerald-500/30 opacity-85'
                     : item.urgency.status === 'critical' || item.urgency.status === 'overdue'
-                    ? 'bg-gradient-to-br from-rose-950/40 via-metal-900/80 to-metal-900/90 border-rose-500/40 shadow-metallic-glow-ruby'
-                    : 'bg-metal-900/70 border-white/10 hover:border-white/20'
+                    ? 'border-rose-500/50 shadow-metallic-glow-ruby'
+                    : 'hover:border-[color:var(--color-border-hover)]'
                 }`}
+                style={{
+                  backgroundColor: 'var(--color-bg-card)',
+                  borderColor: item.isPaid || item.urgency.status === 'critical' || item.urgency.status === 'overdue' ? undefined : 'var(--color-border)',
+                  color: 'var(--color-text-main)'
+                }}
               >
                 {/* Top Row: Name, Bank, Urgency Badge */}
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
-                    <span className="font-extrabold text-sm text-white block">
+                    <span className="font-extrabold text-sm block" style={{ color: 'var(--color-text-main)' }}>
                       {item.name}
                     </span>
                     <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md border mt-1 ${item.bank.badgeClass}`}>
@@ -235,33 +240,33 @@ export const UpcomingDueWidget = ({
                     <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${item.urgency.badgeClass}`}>
                       {item.urgency.label}
                     </span>
-                    <span className="block font-mono font-extrabold text-base text-white mt-1">
+                    <span className="block font-mono font-extrabold text-base mt-1" style={{ color: 'var(--color-text-main)' }}>
                       {formatMoney(item.monthAmount)}
                     </span>
                   </div>
                 </div>
 
                 {/* Middle Row: Dates Detail */}
-                <div className="bg-metal-950/60 rounded-lg p-2 my-2 border border-white/5 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg p-2 my-2 border grid grid-cols-2 gap-2 text-xs" style={{ backgroundColor: 'var(--color-table-head)', borderColor: 'var(--color-border)' }}>
                   <div>
-                    <span className="text-[10px] text-metal-400 block uppercase">Día de Corte:</span>
-                    <span className="font-semibold text-metal-200">
+                    <span className="text-[10px] block uppercase" style={{ color: 'var(--color-text-muted)' }}>Día de Corte:</span>
+                    <span className="font-semibold" style={{ color: 'var(--color-text-main)' }}>
                       {item.billingDay} de cada mes
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-metal-400 block uppercase">Máximo Pago:</span>
-                    <span className="font-bold text-amber-300">
+                    <span className="text-[10px] block uppercase" style={{ color: 'var(--color-text-muted)' }}>Máximo Pago:</span>
+                    <span className="font-bold" style={{ color: 'var(--color-accent)' }}>
                       Día {item.dueDay}
                     </span>
                   </div>
                 </div>
 
                 {/* Bottom Row: Actions */}
-                <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between mt-3 pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
                   <button
                     onClick={() => onEditExpense(item)}
-                    className="text-[11px] text-metal-400 hover:text-white transition-colors"
+                    className="text-[11px] hover:underline transition-colors" style={{ color: 'var(--color-text-muted)' }}
                   >
                     Editar detalle
                   </button>

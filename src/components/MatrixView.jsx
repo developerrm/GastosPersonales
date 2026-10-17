@@ -103,7 +103,7 @@ export const MatrixView = ({
 
   months.forEach((m) => {
     const mKey = m.key;
-    const incObj = incomes[mKey] || { baseSalary: 1000, extraIncome: 0 };
+    const incObj = incomes[mKey] || { baseSalary: 0, extraIncome: 0 };
     const incTotal = (Number(incObj.baseSalary) || 0) + (Number(incObj.extraIncome) || 0);
     monthIncomes[mKey] = incTotal;
 
@@ -287,23 +287,23 @@ export const MatrixView = ({
             <thead>
               <tr className="border-b border-white/15">
                 {/* 1. Banco (Sticky Column) */}
-                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-0 z-20 sticky-column-banco min-w-[130px]">
+                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-0 z-20 sticky-column-banco min-w-[90px] sm:min-w-[130px]">
                   BANCO
                 </th>
 
                 {/* 2. Gasto (Sticky Column) */}
-                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-[130px] z-20 sticky-column-gasto min-w-[180px]">
+                <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-[90px] sm:left-[130px] z-20 sticky-column-gasto min-w-[80px] sm:min-w-[110px] sm:min-w-[180px]">
                   GASTOS MENSUALES
                 </th>
 
                 {/* 3. Fechas */}
-                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[110px] text-center">
+                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-center">
                   CORTE
                 </th>
-                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[110px] text-center">
+                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-center">
                   MÁX PAGO
                 </th>
-                <th className="py-3 px-4 text-amber-300 font-extrabold uppercase tracking-wider min-w-[110px] text-right bg-amber-500/5">
+                <th className="py-3 px-4 text-amber-300 font-extrabold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-right bg-amber-500/5">
                   ESTIMADO
                 </th>
 
@@ -317,7 +317,7 @@ export const MatrixView = ({
                       key={m.key}
                       onMouseEnter={() => setHoveredColKey(m.key)}
                       onMouseLeave={() => setHoveredColKey(null)}
-                      className={`py-3 px-3 text-center min-w-[130px] font-extrabold border-l transition-all ${
+                      className={`py-3 px-3 text-center min-w-[90px] sm:min-w-[130px] font-extrabold border-l transition-all ${
                         isSelected && highlightActive
                           ? 'col-active-month-header'
                           : isColHovered
@@ -402,9 +402,9 @@ export const MatrixView = ({
                     </td>
 
                     {/* 2. Nombre del Gasto (Sticky) */}
-                    <td className="py-2.5 px-4 font-sans sticky left-[130px] z-10 sticky-column-gasto">
+                    <td className="py-2.5 px-4 font-sans sticky left-[90px] sm:left-[130px] z-10 sticky-column-gasto">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="font-bold text-white text-xs truncate max-w-[140px]">{exp.name}</div>
+                        <div className="font-bold text-white text-xs break-words max-w-[140px]">{exp.name}</div>
                         {/* Mini Annual Progress Pill */}
                         {showProgressMini && (
                           <span
@@ -422,7 +422,7 @@ export const MatrixView = ({
                         )}
                       </div>
                       {exp.notes && (
-                        <div className="text-[10px] text-metal-400 truncate max-w-[160px]">
+                        <div className="text-[10px] text-metal-400 break-words max-w-[160px]">
                           {exp.notes}
                         </div>
                       )}
@@ -616,8 +616,8 @@ export const MatrixView = ({
               </tr>
 
               {/* 2. SUELDO / INGRESOS ROW */}
-              <tr className="bg-metal-900/90 text-metal-300 border-t border-white/10 font-sans">
-                <td colSpan={4} className="py-2.5 px-4 uppercase tracking-wider text-right font-bold text-xs sticky left-0 z-10 bg-metal-900">
+              <tr className="border-t font-sans" style={{ backgroundColor: 'var(--color-table-head)', color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}>
+                <td colSpan={4} className="py-2.5 px-4 uppercase tracking-wider text-right font-bold text-xs sticky left-0 z-10" style={{ backgroundColor: 'var(--color-table-head)' }}>
                   Sueldo / Ingreso Total:
                 </td>
                 <td className="py-2.5 px-4 text-right font-mono text-metal-400 text-xs">

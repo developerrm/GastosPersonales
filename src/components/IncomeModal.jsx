@@ -9,14 +9,14 @@ export const IncomeModal = ({
   incomes,
   onSaveIncome
 }) => {
-  const currentIncome = incomes[selectedMonth] || { baseSalary: 1000, extraIncome: 0, notes: '' };
+  const currentIncome = incomes[selectedMonth] || { baseSalary: 0, extraIncome: 0, notes: '' };
 
-  const [baseSalary, setBaseSalary] = useState(currentIncome.baseSalary || 1000);
+  const [baseSalary, setBaseSalary] = useState(currentIncome.baseSalary || 0);
   const [extraIncome, setExtraIncome] = useState(currentIncome.extraIncome || 0);
   const [notes, setNotes] = useState(currentIncome.notes || '');
 
   useEffect(() => {
-    const inc = incomes[selectedMonth] || { baseSalary: 1000, extraIncome: 0, notes: '' };
+    const inc = incomes[selectedMonth] || { baseSalary: 0, extraIncome: 0, notes: '' };
     setBaseSalary(inc.baseSalary);
     setExtraIncome(inc.extraIncome);
     setNotes(inc.notes || '');
