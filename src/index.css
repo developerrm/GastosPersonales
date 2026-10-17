@@ -564,7 +564,7 @@
 }
 
 /* Row Hover */
-.matrix-table tr:hover td {
+.matrix-table tr:not(.matrix-footer-row):hover td {
   background-color: var(--color-bg-card-hover) !important;
 }
 
@@ -646,4 +646,30 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent);
+}
+
+/* Sticky header row while scrolling vertically in the matrix */
+.matrix-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+}
+
+.matrix-table thead th.sticky-column-banco,
+.matrix-table thead th.sticky-column-gasto {
+  z-index: 25;
+}
+
+/* Paid state readable on light themes */
+[data-theme="light"] .matrix-paid-amount,
+[data-theme="rose"] .matrix-paid-amount,
+[data-theme="cupcake"] .matrix-paid-amount {
+  color: #047857 !important;
+  background-color: rgba(16, 185, 129, 0.18) !important;
+}
+
+[data-theme="light"] .matrix-paid-btn,
+[data-theme="rose"] .matrix-paid-btn,
+[data-theme="cupcake"] .matrix-paid-btn {
+  color: #047857 !important;
 }
