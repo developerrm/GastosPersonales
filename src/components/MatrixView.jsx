@@ -487,7 +487,7 @@ export const MatrixView = ({
                               title={isPaid ? 'Marcado como pagado (clic para desmarcar)' : 'Pendiente (clic para marcar pagado)'}
                               className={`p-1 rounded-md transition-all ${
                                 isPaid
-                                  ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30'
+                                  ? 'matrix-paid-btn text-emerald-400 hover:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30'
                                   : 'text-metal-600 hover:text-amber-400 hover:bg-metal-800 border border-transparent'
                               }`}
                             >
@@ -516,7 +516,7 @@ export const MatrixView = ({
                                 title={isModified ? `Monto modificado de base ($${exp.estimatedAmount}) - Clic para editar` : 'Clic para editar monto'}
                                 className={`w-full text-right font-bold transition-all px-1.5 py-0.5 rounded flex items-center justify-end gap-1 ${
                                   isPaid
-                                    ? 'text-emerald-300 bg-emerald-950/20 hover:bg-emerald-900/30'
+                                    ? 'matrix-paid-amount text-emerald-300 bg-emerald-950/20 hover:bg-emerald-900/30'
                                     : amount === 0
                                     ? 'text-metal-500 hover:bg-metal-800'
                                     : !isModified
@@ -575,7 +575,7 @@ export const MatrixView = ({
 
               {/* 1. TOTAL GASTOS MENSUALES ROW */}
               <tr
-                className="font-extrabold shadow-lg"
+                className="font-extrabold shadow-lg matrix-footer-row"
                 style={{
                   background: footerStyle.background,
                   borderTop: `2px solid ${footerStyle.borderColor}`,
@@ -583,7 +583,7 @@ export const MatrixView = ({
                 }}
               >
                 <td
-                  colSpan={4}
+                  colSpan={2}
                   className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold sticky left-0 z-10"
                   style={{
                     background: footerStyle.background
@@ -591,6 +591,7 @@ export const MatrixView = ({
                 >
                   TOTAL GASTOS MENSUALES:
                 </td>
+                <td colSpan={2} className="matrix-footer-filler"></td>
                 <td
                   className="py-3 px-4 text-right font-mono text-sm"
                   style={{ color: footerStyle.estimatedColor }}
@@ -616,10 +617,11 @@ export const MatrixView = ({
               </tr>
 
               {/* 2. SUELDO / INGRESOS ROW */}
-              <tr className="border-t font-sans" style={{ backgroundColor: 'var(--color-table-head)', color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}>
-                <td colSpan={4} className="py-2.5 px-4 uppercase tracking-wider text-right font-bold text-xs sticky left-0 z-10" style={{ backgroundColor: 'var(--color-table-head)' }}>
+              <tr className="border-t font-sans matrix-footer-row" style={{ backgroundColor: 'var(--color-table-head)', color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}>
+                <td colSpan={2} className="py-2.5 px-4 uppercase tracking-wider text-right font-bold text-xs sticky left-0 z-10" style={{ backgroundColor: 'var(--color-table-head)' }}>
                   Sueldo / Ingreso Total:
                 </td>
+                <td colSpan={2} className="matrix-footer-filler"></td>
                 <td className="py-2.5 px-4 text-right font-mono text-metal-400 text-xs">
                   -
                 </td>
@@ -639,10 +641,11 @@ export const MatrixView = ({
               </tr>
 
               {/* 3. SALDOS REMANENTES ROW */}
-              <tr className="bg-metal-950 font-extrabold text-white border-t-2 border-emerald-500/40">
-                <td colSpan={4} className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold text-sm sticky left-0 z-10 bg-metal-950 text-emerald-400">
+              <tr className="matrix-footer-row bg-metal-950 font-extrabold text-white border-t-2 border-emerald-500/40">
+                <td colSpan={2} className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold text-sm sticky left-0 z-10 bg-metal-950 text-emerald-400">
                   Saldos Restantes:
                 </td>
+                <td colSpan={2} className="matrix-footer-filler"></td>
                 <td className="py-3 px-4 text-right font-mono text-xs text-metal-500">
                   -
                 </td>
