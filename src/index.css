@@ -647,3 +647,15 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent);
 }
+
+/* Sticky header row while scrolling vertically in the matrix */
+.matrix-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+}
+
+.matrix-table thead th.sticky-column-banco,
+.matrix-table thead th.sticky-column-gasto {
+  z-index: 25;
+}

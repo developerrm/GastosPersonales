@@ -282,9 +282,9 @@ export const MatrixView = ({
 
       {/* Main Interactive Spreadsheet Matrix */}
       <div className="metallic-card-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-        <div className="overflow-x-auto scrollbar-thin">
+        <div className="overflow-auto max-h-[70vh] scrollbar-thin">
           <table className={`w-full text-left matrix-table text-xs border-collapse ${zebraStripes ? 'matrix-table-zebra' : ''}`}>
-            <thead>
+            <thead className="matrix-thead-sticky">
               <tr className="border-b border-white/15">
                 {/* 1. Banco (Sticky Column) */}
                 <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-0 z-20 sticky-column-banco min-w-[90px] sm:min-w-[130px]">
