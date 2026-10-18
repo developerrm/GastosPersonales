@@ -10,6 +10,10 @@ import {
   X,
   Layers,
   Calendar,
+  CalendarDays,
+  House,
+  MoreHorizontal,
+  ReceiptText,
   BarChart3,
   Table,
   CreditCard,
@@ -35,7 +39,8 @@ export const Navbar = ({
   onOpenBanksModal,
   onOpenThemeModal,
   onToggleMinimalist,
-  onLogout
+  onLogout,
+  user
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -49,6 +54,9 @@ export const Navbar = ({
 
   const currentTheme = THEMES.find((t) => t.id === themeSettings?.theme) || THEMES[0];
   const isMinimalist = !!themeSettings?.minimalistMode;
+  const userName = user?.name?.trim() || user?.given_name || user?.email?.split('@')[0] || 'Usuario';
+  const avatarUrl = user?.picture || user?.avatar;
+  const initials = userName.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md border-b shadow-md">
@@ -69,7 +77,7 @@ export const Navbar = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-lg tracking-tight">
-                  Finanz<span style={{ color: currentTheme.primaryColor }}>Titan</span>
+                  Mis gastos fijos
                 </span>
                 <span
                   className="text-[10px] font-mono px-1.5 py-0.5 rounded-full border uppercase tracking-widest"
@@ -247,17 +255,21 @@ export const Navbar = ({
             >
               <Palette className="w-4 h-4" style={{ color: currentTheme.primaryColor }} />
             </button>
-            <button
-              onClick={onLogout}
-              className="p-2 rounded-xl border text-rose-500"
-              style={{
-                backgroundColor: 'var(--color-bg-card-solid)',
-                borderColor: 'var(--color-border)'
-              }}
-              title="Cerrar sesión"
+            <span
+              className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-metal-800 text-xs font-bold text-metal-100"
+              aria-label={`Avatar de ${userName}`}
+              title={userName}
             >
-              <LogOut className="w-4 h-4" />
-            </button>
+              {initials}
+              {avatarUrl && (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              )}
+            </span>
             <button
               onClick={onOpenExpenseModal}
               className="metallic-btn-gold p-2 rounded-xl"
@@ -394,6 +406,39 @@ export const Navbar = ({
           </button>
         </div>
       )}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 border-t border-white/10 bg-metal-950/95 px-2 pt-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.22)] backdrop-blur-xl md:hidden"
+        aria-label="Navegación principal"
+      >
+        {[
+          { label: 'Inicio', icon: House, tab: 'matrix' },
+          { label: 'Gastos', icon: ReceiptText, tab: 'cards' },
+          { label: 'Calendario', icon: CalendarDays, tab: 'calendar' },
+          { label: 'Más', icon: MoreHorizontal, tab: null }
+        ].map(({ label, icon: Icon, tab }) => {
+          const isActive = tab ? activeTab === tab : mobileMenuOpen || ['analytics', 'banks'].includes(activeTab);
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={() => {
+                if (tab) {
+                  setActiveTab(tab);
+                  setMobileMenuOpen(false);
+                } else {
+                  setMobileMenuOpen((open) => !open);
+                }
+              }}
+              aria-current={tab && activeTab === tab ? 'page' : undefined}
+              aria-expanded={tab ? undefined : mobileMenuOpen}
+              className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors ${isActive ? 'text-amber-400' : 'text-metal-400 hover:text-metal-100'}`}
+            >
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </header>
   );
 };

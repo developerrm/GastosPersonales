@@ -8,6 +8,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MonthSelector } from './components/MonthSelector';
 import { MetricCards } from './components/MetricCards';
+import { MobileOverview } from './components/MobileOverview';
 import { UpcomingDueWidget } from './components/UpcomingDueWidget';
 import { MatrixView } from './components/MatrixView';
 import { CardsView } from './components/CardsView';
@@ -403,37 +404,58 @@ export function App() {
           onOpenThemeModal={() => setIsThemeModalOpen(true)}
           onToggleMinimalist={handleToggleMinimalist}
           onLogout={handleLogout}
+          user={session.user}
         />
       </div>
 
       {/* 3. Main Content Wrapper with dynamic left margin for Sidebar */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-28 md:pb-5 space-y-5">
           {dataError && (
             <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
               {dataError}
             </p>
           )}
+          {activeTab === 'matrix' && (
+            <MobileOverview
+              user={session.user}
+              expenses={expenses}
+              incomes={incomes}
+              selectedMonth={selectedMonth}
+              setSelectedMonth={setSelectedMonth}
+              months={months}
+              onAddNewMonth={handleAddNewMonth}
+              onAddExpense={() => {
+                setEditingExpense(null);
+                setIsExpenseModalOpen(true);
+              }}
+            />
+          )}
+
           {/* Month Selector Timeline */}
-          <MonthSelector
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-          months={months}
-          onAddNewMonth={handleAddNewMonth}
-        />
+          <div className={activeTab === 'matrix' ? 'hidden md:block' : ''}>
+            <MonthSelector
+              selectedMonth={selectedMonth}
+              setSelectedMonth={setSelectedMonth}
+              months={months}
+              onAddNewMonth={handleAddNewMonth}
+            />
+          </div>
 
         {/* 5 KPI Metric Cards (With Collapse & Minimalist Modes) */}
         {themeSettings.showKpiCards !== false && (
-          <MetricCards
-            expenses={expenses}
-            incomes={incomes}
-            selectedMonth={selectedMonth}
-            banks={banks}
-            onOpenIncomeModal={() => setIsIncomeModalOpen(true)}
-            onSelectExpense={handleOpenQuickPay}
-            isCollapsed={isKpiCollapsed}
-            onToggleCollapse={() => setIsKpiCollapsed(!isKpiCollapsed)}
-          />
+          <div className={activeTab === 'matrix' ? 'hidden md:block' : ''}>
+            <MetricCards
+              expenses={expenses}
+              incomes={incomes}
+              selectedMonth={selectedMonth}
+              banks={banks}
+              onOpenIncomeModal={() => setIsIncomeModalOpen(true)}
+              onSelectExpense={handleOpenQuickPay}
+              isCollapsed={isKpiCollapsed}
+              onToggleCollapse={() => setIsKpiCollapsed(!isKpiCollapsed)}
+            />
+          </div>
         )}
 
         {/* Upcoming Due Date Strip / Chronogram (always visible or on relevant tabs) */}
