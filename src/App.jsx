@@ -36,10 +36,23 @@ const normalizeIncome = (income) => ({
   extraIncome: Number(income.extraIncome),
 });
 
+const MONTH_KEY = 'selectedMonth';
+
+function getInitialMonth() {
+  const saved = localStorage.getItem(MONTH_KEY);
+  if (saved && /^\d{4}-(0[1-9]|1[0-2])$/.test(saved)) return saved;
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
 export function App() {
   const [session, setSession] = useState(() => getSession());
   const [activeTab, setActiveTab] = useState('matrix');
-  const [selectedMonth, setSelectedMonth] = useState('2026-09');
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
+
+  useEffect(() => {
+    localStorage.setItem(MONTH_KEY, selectedMonth);
+  }, [selectedMonth]);
   const [isLoading, setIsLoading] = useState(Boolean(getSession()));
   const [dataError, setDataError] = useState('');
 
