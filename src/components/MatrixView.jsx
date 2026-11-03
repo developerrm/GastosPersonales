@@ -17,6 +17,7 @@ import {
   Calendar,
   Check,
   Eye,
+  EyeOff,
   Layers,
   ChevronRight
 } from 'lucide-react';
@@ -45,6 +46,7 @@ export const MatrixView = ({
   const [editingCell, setEditingCell] = useState(null); // { expId, monthKey, value }
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [hoveredColKey, setHoveredColKey] = useState(null);
+  const [showBillingDetails, setShowBillingDetails] = useState(false);
 
   const highlightActive = themeSettings?.highlightActiveMonth !== false;
   const zebraStripes = themeSettings?.zebraStripes !== false;
@@ -293,19 +295,35 @@ export const MatrixView = ({
 
                 {/* 2. Gasto (Sticky Column) */}
                 <th className="py-3 px-4 text-metal-300 font-extrabold uppercase tracking-wider sticky left-[90px] sm:left-[130px] z-20 sticky-column-gasto min-w-[80px] sm:min-w-[110px] sm:min-w-[180px]">
-                  GASTOS MENSUALES
+                  <div className="flex items-center justify-between gap-2">
+                    <span>GASTOS MENSUALES</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowBillingDetails((visible) => !visible)}
+                      aria-label={showBillingDetails ? 'Ocultar columnas Corte, Máx Pago y Estimado' : 'Mostrar columnas Corte, Máx Pago y Estimado'}
+                      aria-pressed={showBillingDetails}
+                      title={showBillingDetails ? 'Ocultar detalles de facturación' : 'Mostrar detalles de facturación'}
+                      className="p-1 rounded text-metal-400 hover:text-white hover:bg-metal-700 transition-colors shrink-0"
+                    >
+                      {showBillingDetails ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </th>
 
                 {/* 3. Fechas */}
-                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-center">
-                  CORTE
-                </th>
-                <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-center">
-                  MÁX PAGO
-                </th>
-                <th className="py-3 px-4 text-amber-300 font-extrabold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-right bg-amber-500/5">
-                  ESTIMADO
-                </th>
+                {showBillingDetails && (
+                  <>
+                    <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-center">
+                      CORTE
+                    </th>
+                    <th className="py-3 px-3 text-metal-400 font-bold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-center">
+                      MÁX PAGO
+                    </th>
+                    <th className="py-3 px-4 text-amber-300 font-extrabold uppercase tracking-wider min-w-[80px] sm:min-w-[110px] text-right bg-amber-500/5">
+                      ESTIMADO
+                    </th>
+                  </>
+                )}
 
                 {/* 4. Visible Month Columns */}
                 {visibleMonths.map((m) => {
@@ -429,31 +447,35 @@ export const MatrixView = ({
                     </td>
 
                     {/* 3. Fecha Emisión / Corte */}
-                    <td className="py-2.5 px-3 text-center text-metal-300 font-sans text-xs">
-                      Día {exp.billingDay}
-                    </td>
+                    {showBillingDetails && (
+                      <>
+                        <td className="py-2.5 px-3 text-center text-metal-300 font-sans text-xs">
+                          Día {exp.billingDay}
+                        </td>
 
-                    {/* 4. Fecha Máxima de Pago */}
-                    <td className="py-2.5 px-3 text-center font-sans text-xs">
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full font-bold border"
-                        style={{
-                          backgroundColor: 'var(--color-accent-glow)',
-                          color: 'var(--color-accent)',
-                          borderColor: 'var(--color-border)'
-                        }}
-                      >
-                        Día {exp.dueDay}
-                      </span>
-                    </td>
+                        {/* 4. Fecha Máxima de Pago */}
+                        <td className="py-2.5 px-3 text-center font-sans text-xs">
+                          <span
+                            className="inline-block px-2 py-0.5 rounded-full font-bold border"
+                            style={{
+                              backgroundColor: 'var(--color-accent-glow)',
+                              color: 'var(--color-accent)',
+                              borderColor: 'var(--color-border)'
+                            }}
+                          >
+                            Día {exp.dueDay}
+                          </span>
+                        </td>
 
-                    {/* 5. Estimado ($) */}
-                    <td
-                      className="py-2.5 px-4 text-right font-extrabold"
-                      style={{ backgroundColor: 'var(--color-active-col)', color: 'var(--color-text-main)' }}
-                    >
-                      {formatMoney(exp.estimatedAmount)}
-                    </td>
+                        {/* 5. Estimado ($) */}
+                        <td
+                          className="py-2.5 px-4 text-right font-extrabold"
+                          style={{ backgroundColor: 'var(--color-active-col)', color: 'var(--color-text-main)' }}
+                        >
+                          {formatMoney(exp.estimatedAmount)}
+                        </td>
+                      </>
+                    )}
 
                     {/* 6. Dynamic Month Columns */}
                     {visibleMonths.map((m) => {
@@ -591,13 +613,17 @@ export const MatrixView = ({
                 >
                   TOTAL GASTOS MENSUALES:
                 </td>
-                <td colSpan={2} className="matrix-footer-filler"></td>
-                <td
-                  className="py-3 px-4 text-right font-mono text-sm"
-                  style={{ color: footerStyle.estimatedColor }}
-                >
-                  {formatMoney(totalEstimatedSum)}
-                </td>
+                {showBillingDetails && (
+                  <>
+                    <td colSpan={2} className="matrix-footer-filler"></td>
+                    <td
+                      className="py-3 px-4 text-right font-mono text-sm"
+                      style={{ color: footerStyle.estimatedColor }}
+                    >
+                      {formatMoney(totalEstimatedSum)}
+                    </td>
+                  </>
+                )}
                 {visibleMonths.map((m) => (
                   <td
                     key={m.key}
@@ -621,10 +647,14 @@ export const MatrixView = ({
                 <td colSpan={2} className="py-2.5 px-4 uppercase tracking-wider text-right font-bold text-xs sticky left-0 z-10" style={{ backgroundColor: 'var(--color-table-head)' }}>
                   Sueldo / Ingreso Total:
                 </td>
-                <td colSpan={2} className="matrix-footer-filler"></td>
-                <td className="py-2.5 px-4 text-right font-mono text-metal-400 text-xs">
-                  -
-                </td>
+                {showBillingDetails && (
+                  <>
+                    <td colSpan={2} className="matrix-footer-filler"></td>
+                    <td className="py-2.5 px-4 text-right font-mono text-metal-400 text-xs">
+                      -
+                    </td>
+                  </>
+                )}
                 {visibleMonths.map((m) => (
                   <td key={m.key} className="py-2.5 px-3 text-right font-mono text-xs text-amber-400 font-bold border-l border-white/5">
                     {formatMoney(monthIncomes[m.key] || 0)}
@@ -645,10 +675,14 @@ export const MatrixView = ({
                 <td colSpan={2} className="py-3 px-4 font-sans uppercase tracking-wider text-right font-extrabold text-sm sticky left-0 z-10 bg-metal-950 text-emerald-400">
                   Saldos Restantes:
                 </td>
-                <td colSpan={2} className="matrix-footer-filler"></td>
-                <td className="py-3 px-4 text-right font-mono text-xs text-metal-500">
-                  -
-                </td>
+                {showBillingDetails && (
+                  <>
+                    <td colSpan={2} className="matrix-footer-filler"></td>
+                    <td className="py-3 px-4 text-right font-mono text-xs text-metal-500">
+                      -
+                    </td>
+                  </>
+                )}
                 {visibleMonths.map((m) => {
                   const balance = monthBalances[m.key] || 0;
                   return (
