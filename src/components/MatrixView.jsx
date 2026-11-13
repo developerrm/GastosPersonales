@@ -560,7 +560,7 @@ export const MatrixView = ({
                                   border: `1px solid ${modifiedStyle.borderColor}`
                                 } : {}}
                               >
-                                {amount === 0 ? (
+                                {amount === 0 && payment?.amount == null ? (
                                   <span className="text-metal-500">-</span>
                                 ) : (
                                   <>

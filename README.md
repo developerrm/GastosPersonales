@@ -21,6 +21,8 @@ La aplicación usa [GastosPersonalesBackend](https://github.com/developerrm/Gast
 
 Las preferencias visuales y los meses de navegación permanecen en el almacenamiento local del navegador. Los datos locales que ya existían no se migran ni se sobrescriben automáticamente. La API actual permite crear bancos y categorías, pero no editarlos ni eliminarlos; la restauración de backups todavía no se ofrece desde la interfaz.
 
+La matriz carga los pagos de todos los meses de navegación, incluido el mes activo. Al consultar cada mes, el backend crea los pagos pendientes que aún no existan para los gastos registrados.
+
 ## 🛠️ Tecnologías
 
 - **React 18**

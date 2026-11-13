@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { storageService } from './services/storageService';
 import { apiService } from './services/apiService';
+import { loadPaymentsByExpense, normalizePayment } from './services/monthlyPayments';
 import { clearSession, getSession } from './services/authService';
 import { themeService, DEFAULT_THEME_SETTINGS } from './services/themeService';
 import LoginPage from './components/LoginPage';
@@ -22,13 +23,6 @@ import { SqlMigrationModal } from './components/SqlMigrationModal';
 import { DataExportModal } from './components/DataExportModal';
 import { ThemeCustomizerModal } from './components/ThemeCustomizerModal';
 import { confirmAction, showErrorAlert } from './utils/alerts';
-
-const normalizePayment = (payment) => ({
-  ...payment,
-  amount: payment.amount == null ? null : Number(payment.amount),
-  paidDate: payment.paidDate ? payment.paidDate.slice(0, 10) : null,
-  note: payment.notes || '',
-});
 
 const normalizeIncome = (income) => ({
   ...income,
@@ -81,30 +75,29 @@ export function App() {
   const [quickPayExpense, setQuickPayExpense] = useState(null);
 
   const sessionTokenRef = useRef(null);
+  const loadRequestRef = useRef(0);
   sessionTokenRef.current = session?.token ?? session?.user?.email ?? null;
 
   const loadData = useCallback(async () => {
     const requestOwner = sessionTokenRef.current;
+    const requestId = ++loadRequestRef.current;
+    const loadedMonths = storageService.getMonths();
+    const monthKeys = [...loadedMonths.map((month) => month.key), selectedMonth];
     setIsLoading(true);
     setDataError('');
     try {
-      const [loadedExpenses, loadedIncomes, loadedBanks, loadedCategories, loadedPayments] = await Promise.all([
+      const [loadedExpenses, loadedIncomes, loadedBanks, loadedCategories, paymentsByExpense] = await Promise.all([
         apiService.getExpenses(),
         apiService.getIncomes(),
         apiService.getBanks(),
         apiService.getCategories(),
-        apiService.getPayments(selectedMonth),
+        loadPaymentsByExpense(monthKeys, apiService.getPayments),
       ]);
-      if (sessionTokenRef.current !== requestOwner) return;
-      const paymentsByExpense = new Map(
-        loadedPayments.map((payment) => [payment.expenseId, normalizePayment(payment)])
-      );
+      if (sessionTokenRef.current !== requestOwner || loadRequestRef.current !== requestId) return;
       const normalizedExpenses = loadedExpenses.map((expense) => ({
         ...expense,
         estimatedAmount: Number(expense.estimatedAmount),
-        monthlyPayments: {
-          [selectedMonth]: paymentsByExpense.get(expense.id) || {},
-        },
+        monthlyPayments: paymentsByExpense.get(expense.id) || {},
       }));
       const normalizedIncomes = Object.fromEntries(
         loadedIncomes.map((income) => [income.monthKey, normalizeIncome(income)])
@@ -114,7 +107,7 @@ export function App() {
       setIncomes(normalizedIncomes);
       setBanks(loadedBanks);
       setCategories(loadedCategories);
-      setMonths(storageService.getMonths());
+      setMonths(loadedMonths);
 
       const loadedTheme = themeService.getSettings();
       setThemeSettings(loadedTheme);
@@ -124,6 +117,7 @@ export function App() {
         setIsDueWidgetCollapsed(true);
       }
     } catch (error) {
+      if (sessionTokenRef.current !== requestOwner || loadRequestRef.current !== requestId) return;
       if (error.message.startsWith('La sesión venció')) {
         clearSession();
         setSession(null);
@@ -131,7 +125,9 @@ export function App() {
         setDataError(error.message);
       }
     } finally {
-      setIsLoading(false);
+      if (sessionTokenRef.current === requestOwner && loadRequestRef.current === requestId) {
+        setIsLoading(false);
+      }
     }
   }, [selectedMonth]);
 
@@ -202,10 +198,12 @@ export function App() {
       const savedExpense = expenseData.id
         ? await apiService.updateExpense(expenseData.id, expenseData)
         : await apiService.createExpense(expenseData);
-      const currentMonthPayment = savedExpense.id === expenseData.id
+      const newExpensePayments = savedExpense.id === expenseData.id
         ? null
-        : (await apiService.getPayments(selectedMonth))
-          .find((payment) => payment.expenseId === savedExpense.id);
+        : await loadPaymentsByExpense(
+          [...months.map((month) => month.key), selectedMonth],
+          apiService.getPayments
+        );
       setExpenses((current) => {
         const existing = current.find((expense) => expense.id === savedExpense.id);
         const updatedExpense = {
@@ -213,9 +211,7 @@ export function App() {
           estimatedAmount: Number(savedExpense.estimatedAmount),
           monthlyPayments: {
             ...existing?.monthlyPayments,
-            ...(currentMonthPayment
-              ? { [selectedMonth]: normalizePayment(currentMonthPayment) }
-              : {}),
+            ...newExpensePayments?.get(savedExpense.id),
           },
         };
         const updated = existing
