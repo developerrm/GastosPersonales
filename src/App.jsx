@@ -494,6 +494,7 @@ export function App() {
               banks={banks}
               categories={categories}
               selectedMonth={selectedMonth}
+              setSelectedMonth={setSelectedMonth}
               themeSettings={themeSettings}
               onUpdatePayment={handleUpdatePayment}
               onOpenExpenseModal={() => {
