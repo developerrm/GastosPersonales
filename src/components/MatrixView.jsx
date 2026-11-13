@@ -31,6 +31,7 @@ export const MatrixView = ({
   banks,
   categories,
   selectedMonth = '2026-09',
+  setSelectedMonth,
   themeSettings,
   onUpdatePayment,
   onOpenExpenseModal,
@@ -347,27 +348,35 @@ export const MatrixView = ({
                         color: isSelected && highlightActive ? 'var(--color-accent)' : 'inherit'
                       }}
                     >
-                      <div className="flex items-center justify-center gap-1">
-                        <span className="font-extrabold text-sm tracking-tight">{m.shortLabel || m.label}</span>
-                        {isSelected && highlightActive && (
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold tracking-tight shadow-sm"
-                            style={{
-                              backgroundColor: 'var(--color-accent)',
-                              color: '#ffffff'
-                            }}
-                            title="Mes Seleccionado"
-                          >
-                            ACTIVO
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        className="text-[10px] font-mono font-normal mt-0.5"
-                        style={{ color: 'var(--color-accent)' }}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonth(m.key)}
+                        aria-pressed={isSelected}
+                        aria-label={`Seleccionar ${m.label || m.shortLabel} como mes activo`}
+                        className="w-full rounded-md text-inherit transition-colors hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 focus-visible:outline-offset-2"
                       >
-                        Sueldo: {formatMoney(monthIncomes[m.key] || 0)}
-                      </div>
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-extrabold text-sm tracking-tight">{m.shortLabel || m.label}</span>
+                          {isSelected && highlightActive && (
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold tracking-tight shadow-sm"
+                              style={{
+                                backgroundColor: 'var(--color-accent)',
+                                color: '#ffffff'
+                              }}
+                              title="Mes Seleccionado"
+                            >
+                              ACTIVO
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className="text-[10px] font-mono font-normal mt-0.5"
+                          style={{ color: 'var(--color-accent)' }}
+                        >
+                          Sueldo: {formatMoney(monthIncomes[m.key] || 0)}
+                        </div>
+                      </button>
                     </th>
                   );
                 })}
@@ -481,13 +490,13 @@ export const MatrixView = ({
                     {visibleMonths.map((m) => {
                       const mKey = m.key;
                       const payment = exp.monthlyPayments?.[mKey];
-                      const amount = payment?.amount !== undefined ? payment.amount : exp.estimatedAmount;
+                      const amount = payment?.amount != null ? Number(payment.amount) : Number(exp.estimatedAmount) || 0;
                       const isPaid = payment?.status === 'paid';
                       const isSelectedMonth = mKey === selectedMonth;
                       const isEditing =
                         editingCell && editingCell.expId === exp.id && editingCell.monthKey === mKey;
                       const isColHovered = crosshairHover && hoveredColKey === mKey;
-                      const isModified = payment?.amount !== undefined && Number(payment.amount) !== Number(exp.estimatedAmount);
+                      const isModified = payment?.amount != null && Number(payment.amount) !== Number(exp.estimatedAmount);
 
                       return (
                         <td
